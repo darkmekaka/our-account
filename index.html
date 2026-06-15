@@ -449,11 +449,11 @@
             li.className = 'ledger-item';
             li.onclick = () => openModal(item.id);
 
-            // [수정 핵심] 기존 색상값에 투명도를 주어 음영률을 원래의 30% 수준(alpha: 0.3)으로 연하게 다운시켰습니다.
+            // [수정 핵심] 기존 색상값에 투명도를 주어 음영률을 원래의 50% 수준(alpha: 0.5)으로 적용했습니다.
             if (item.user === '남편') {
-                li.style.backgroundColor = 'rgba(224, 242, 254, 0.3)'; 
+                li.style.backgroundColor = 'rgba(224, 242, 254, 0.5)'; 
             } else if (item.user === '아내') {
-                li.style.backgroundColor = 'rgba(252, 231, 243, 0.3)'; 
+                li.style.backgroundColor = 'rgba(252, 231, 243, 0.5)'; 
             }
 
             const sign = item.type === 'income' ? '+ ' : '- ';
