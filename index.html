@@ -449,22 +449,25 @@
             li.className = 'ledger-item';
             li.onclick = () => openModal(item.id);
 
-            const userClass = item.user === '남편' ? 'husband' : 'wife';
+            // [수정 핵심 ①] 글자 배지를 없애는 대신 줄(li) 전체 배경색을 남편(블루)/아내(핑크) 색상으로 변경
+            if (item.user === '남편') {
+                li.style.backgroundColor = '#e0f2fe'; 
+            } else if (item.user === '아내') {
+                li.style.backgroundColor = '#fce7f3'; 
+            }
+
             const sign = item.type === 'income' ? '+ ' : '- ';
             const amountClass = item.type === 'income' ? 'income' : 'expense';
             
-            const cardBadgeHtml = (item.type === 'expense' && item.card && item.card !== '선택안함') 
-                ? `<span class="card-badge">${item.card}</span>` 
-                : '';
-                
-            // 날짜 표기 가공 (월-일만 리스트에 간단히 표기)
+            // [수정 핵심 ②] 원래 남편/아내 텍스트가 들어가던 자리에 '카드종류'가 깔끔하게 노출되도록 배치
+            // 수입일 때는 카드가 없으므로 '수입', 카드를 지정하지 않았을 때는 '현금'으로 보기 좋게 처리합니다.
+            const cardText = (item.card && item.card !== '선택안함') ? item.card : (item.type === 'income' ? '수입' : '현금');
             const formattedDate = item.date ? item.date.substring(5) : '';
 
             li.innerHTML = `
                 <div class="item-info">
-                    <span class="user-badge ${userClass}">${item.user}</span>
+                    <span class="card-badge">${cardText}</span>
                     <span class="date-text">${formattedDate}</span>
-                    ${cardBadgeHtml}
                     <span class="item-title">${item.title}</span>
                 </div>
                 <div class="item-amount ${amountClass}">${sign}${item.amount.toLocaleString()}원</div>
