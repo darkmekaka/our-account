@@ -8,14 +8,14 @@
         body { font-family: 'Malgun Gothic', sans-serif; background-color: #f5f7fa; margin: 0; padding: 0; display: flex; justify-content: center; }
         .app-container { width: 100%; max-width: 480px; background-color: #ffffff; min-height: 100vh; box-shadow: 0 0 20px rgba(0,0,0,0.05); display: flex; flex-direction: column; position: relative; }
         
-        /* 대시보드 상단 */
+        /* 헤더 - 제목 중앙, 잔액/요약 오른쪽 정렬 */
         .header { background-color: #1e293b; color: white; padding: 25px 20px; border-bottom-left-radius: 24px; border-bottom-right-radius: 24px; }
-        .header h1 { margin: 0; font-size: 16px; opacity: 0.8; font-weight: normal; }
-        .balance-box { margin-top: 10px; margin-bottom: 20px; }
+        .header h1 { margin: 0 0 10px 0; font-size: 16px; opacity: 0.8; font-weight: normal; text-align: center; }
+        .balance-box { margin-top: 10px; margin-bottom: 20px; text-align: right; }
         .balance-box .label { font-size: 13px; opacity: 0.7; }
         .balance-box .amount { font-size: 30px; font-weight: bold; }
-        .summary-row { display: flex; gap: 15px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 15px; }
-        .summary-item { flex: 1; }
+        .summary-row { display: flex; gap: 15px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 15px; justify-content: flex-end; }
+        .summary-item { text-align: right; }
         .summary-item .title { font-size: 12px; opacity: 0.7; margin-bottom: 4px; }
         .summary-item .val { font-size: 16px; font-weight: bold; }
         .summary-item.income .val { color: #4ade80; }
@@ -24,14 +24,13 @@
         /* 입력 섹션 */
         .input-section { padding: 20px; border-bottom: 8px solid #f5f7fa; }
         .type-selector { display: flex; gap: 10px; margin-bottom: 12px; }
-        .type-btn { flex: 1; padding: 12px; border: 1px solid #e2e8f0; border-radius: 8px; text-align: center; font-size: 14px; font-weight: bold; cursor: pointer; background-color: #f8fafc; color: #64748b; transition: all 0.2s; user-select: none; -webkit-user-select: none; }
+        .type-btn { flex: 1; padding: 12px; border: 1px solid #e2e8f0; border-radius: 8px; text-align: center; font-size: 14px; font-weight: bold; cursor: pointer; background-color: #f8fafc; color: #64748b; transition: all 0.2s; user-select: none; }
         
         .type-btn.active.husband { background-color: #e0f2fe; color: #0369a1; border-color: #0369a1; }
         .type-btn.active.wife { background-color: #fce7f3; color: #be185d; border-color: #be185d; }
         .type-btn.active.income { background-color: #e8f5e9; color: #2e7d32; border-color: #2e7d32; }
         .type-btn.active.expense { background-color: #ffebee; color: #c62828; border-color: #c62828; }
         
-        /* 카드 박스 반응형 수정 */
         .input-row { display: flex; gap: 8px; margin-bottom: 12px; }
         input, select { padding: 12px; border: 1px solid #e2e8f0; border-radius: 8px; font-size: 15px; outline: none; background-color: #f8fafc; box-sizing: border-box; }
         input:focus, select:focus { border-color: #1e293b; background-color: #fff; }
@@ -40,43 +39,30 @@
         .input-row select { width: 35%; max-width: 120px; flex-shrink: 0; }
         
         .submit-btn { width: 100%; padding: 14px; background-color: #1e293b; color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; }
-        .submit-btn:disabled { background-color: #64748b; cursor: not-allowed; }
         
         /* 리스트 내역 */
         .list-section { padding: 20px; flex: 1; }
         .list-title { font-size: 16px; font-weight: bold; color: #1e293b; margin-bottom: 15px; }
         .ledger-list { list-style: none; padding: 0; margin: 0; }
         .ledger-item { display: flex; justify-content: space-between; align-items: center; padding: 14px 10px; border-bottom: 1px solid #f1f5f9; cursor: pointer; border-radius: 6px; }
-        .ledger-item:hover { background-color: #f8fafc; }
-        .item-info { display: flex; align-items: center; gap: 12px; }
-        
-        .user-badge { padding: 4px 8px; border-radius: 6px; font-size: 12px; font-weight: bold; }
+        .user-badge { padding: 4px 8px; border-radius: 6px; font-size: 12px; font-weight: bold; margin-right: 8px; }
         .user-badge.husband { background-color: #e0f2fe; color: #0369a1; }
         .user-badge.wife { background-color: #fce7f3; color: #be185d; }
-        .card-badge { font-size: 11px; background-color: #f1f5f9; color: #475569; padding: 3px 6px; border-radius: 4px; border: 1px solid #e2e8f0; }
-        
+        .card-badge { font-size: 11px; background-color: #f1f5f9; color: #475569; padding: 3px 6px; border-radius: 4px; border: 1px solid #e2e8f0; margin-right: 8px; }
         .item-title { font-size: 15px; color: #334155; font-weight: 500; }
         .item-amount { font-size: 16px; font-weight: bold; }
         .item-amount.income { color: #2e7d32; }
         .item-amount.expense { color: #c62828; }
         
-        /* 모달 팝업 */
         .modal-overlay { display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); justify-content: center; align-items: center; z-index: 100; }
         .modal-content { background: white; padding: 20px; border-radius: 16px; width: 85%; max-width: 380px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
-        .modal-title { font-size: 16px; font-weight: bold; margin-bottom: 15px; color: #1e293b; }
-        .modal-buttons { display: flex; gap: 10px; margin-top: 15px; }
-        .modal-btn { flex: 1; padding: 12px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 14px; }
-        .modal-btn.save { background-color: #1e293b; color: white; }
-        .modal-btn.delete { background-color: #ef4444; color: white; }
-        .modal-btn.cancel { background-color: #e2e8f0; color: #475569; }
-        .loading-text { text-align: center; color: #64748b; font-size: 14px; padding: 20px 0; }
     </style>
 </head>
 <body>
 
 <div class="app-container">
     <div class="header">
-        <h1>쑥잠이네 공동 가계부</h1>
+        <h1>쑥잠이네 가계부</h1>
         <div class="balance-box">
             <div class="label">이번 달 정산 잔액</div>
             <div class="amount" id="db-balance">0 원</div>
@@ -98,12 +84,10 @@
             <div class="type-btn husband active" id="btn-user-husband" onclick="changeUser('남편')">남편</div>
             <div class="type-btn wife" id="btn-user-wife" onclick="changeUser('아내')">아내</div>
         </div>
-
         <div class="type-selector">
             <div class="type-btn income" id="btn-inc" onclick="selectType('income')">수입</div>
             <div class="type-btn expense active" id="btn-exp" onclick="selectType('expense')">지출</div>
         </div>
-        
         <div class="input-row">
             <input type="number" id="amount" placeholder="금액 입력 (원)">
             <select id="card">
@@ -118,67 +102,22 @@
                 <option value="현금/계좌">현금/계좌</option>
             </select>
         </div>
-
         <div class="input-row">
             <input type="text" id="title" placeholder="사용 내역을 입력하세요" style="width: 100%;">
         </div>
-
         <button class="submit-btn" onclick="addItem()">가계부 등록하기</button>
     </div>
 
     <div class="list-section">
-        <div class="list-title">최근 입출금 내역 (클릭 시 수정/삭제)</div>
-        <ul class="ledger-list" id="ledger-list">
-            <div class="loading-text" id="loading-msg">데이터를 불러오는 중...</div>
-        </ul>
-    </div>
-
-    <div class="modal-overlay" id="edit-modal">
-        <div class="modal-content">
-            <div class="modal-title">내역 수정 / 삭제</div>
-            <div class="type-selector">
-                <div class="type-btn husband" id="modal-user-husband" onclick="changeModalUser('남편')">남편</div>
-                <div class="type-btn wife" id="modal-user-wife" onclick="changeModalUser('아내')">아내</div>
-            </div>
-            <div class="type-selector">
-                <div class="type-btn income" id="modal-inc" onclick="selectModalType('income')">수입</div>
-                <div class="type-btn expense" id="modal-exp" onclick="selectModalType('expense')">지출</div>
-            </div>
-            <div class="input-row" style="margin-top:12px;">
-                <input type="number" id="modal-amount">
-                <select id="modal-card">
-                    <option value="선택안함">카드 선택</option>
-                    <option value="현대카드">현대카드</option>
-                    <option value="bc카드">bc카드</option>
-                    <option value="국민카드">국민카드</option>
-                    <option value="신한카드">신한카드</option>
-                    <option value="삼성카드">삼성카드</option>
-                    <option value="롯데카드">롯데카드</option>
-                    <option value="NH카드">NH카드</option>
-                    <option value="현금/계좌">현금/계좌</option>
-                </select>
-            </div>
-            <div class="input-row">
-                <input type="text" id="modal-title" style="width: 100%;">
-            </div>
-            <div class="modal-buttons">
-                <button class="modal-btn delete" onclick="deleteItem()">삭제</button>
-                <button class="modal-btn cancel" onclick="closeModal()">취소</button>
-                <button class="modal-btn save" id="save-btn" onclick="updateItem()">수정완료</button>
-            </div>
-        </div>
+        <div class="list-title">최근 입출금 내역</div>
+        <ul class="ledger-list" id="ledger-list"></ul>
     </div>
 </div>
 
 <script>
     const googleWebAppsUrl = "https://script.google.com/macros/s/AKfycbxucl6WBycngDBXGEorfn_ueclPlvMaEl9jZo2SqefsHTnFEPJj-QoVWLau_riTXWNV/exec"; 
-
     let ledgerItems = [];
-    let selectedUser = '남편';
-    let selectedType = 'expense'; 
-    let currentEditingId = null; 
-    let modalSelectedUser = '남편';
-    let modalSelectedType = 'expense';
+    let selectedUser = '남편', selectedType = 'expense';
 
     function changeUser(user) {
         selectedUser = user;
@@ -191,100 +130,38 @@
         document.getElementById('btn-inc').classList.toggle('active', type === 'income');
         document.getElementById('btn-exp').classList.toggle('active', type === 'expense');
         document.getElementById('card').disabled = (type === 'income');
-        if(type === 'income') document.getElementById('card').value = '선택안함';
-    }
-
-    function changeModalUser(user) {
-        modalSelectedUser = user;
-        document.getElementById('modal-user-husband').classList.toggle('active', user === '남편');
-        document.getElementById('modal-user-wife').classList.toggle('active', user === '아내');
-    }
-
-    function selectModalType(type) {
-        modalSelectedType = type;
-        document.getElementById('modal-inc').classList.toggle('active', type === 'income');
-        document.getElementById('modal-exp').classList.toggle('active', type === 'expense');
-        document.getElementById('modal-card').disabled = (type === 'income');
-        if(type === 'income') document.getElementById('modal-card').value = '선택안함';
     }
 
     function loadCloudData() {
-        fetch(googleWebAppsUrl)
-        .then(response => response.json())
-        .then(data => {
+        fetch(googleWebAppsUrl).then(res => res.json()).then(data => {
             ledgerItems = data;
             renderApp();
         });
     }
 
     function addItem() {
-        const data = {
-            action: 'add',
-            id: Date.now(),
-            type: selectedType === 'income' ? '수입' : '지출',
-            user: selectedUser,
-            title: document.getElementById('title').value,
-            amount: parseInt(document.getElementById('amount').value),
-            card: document.getElementById('card').value
-        };
+        const data = { action: 'add', id: Date.now(), type: selectedType === 'income' ? '수입' : '지출', user: selectedUser, title: document.getElementById('title').value, amount: parseInt(document.getElementById('amount').value), card: document.getElementById('card').value };
         fetch(googleWebAppsUrl, { method: 'POST', body: JSON.stringify(data) }).then(() => location.reload());
-    }
-
-    function openModal(id) {
-        currentEditingId = id;
-        const item = ledgerItems.find(i => i.id === id);
-        document.getElementById('modal-title').value = item.title;
-        document.getElementById('modal-amount').value = item.amount;
-        changeModalUser(item.user);
-        selectModalType(item.type === '수입' ? 'income' : 'expense');
-        document.getElementById('modal-card').value = item.card || '선택안함';
-        document.getElementById('edit-modal').style.display = 'flex';
-    }
-
-    function closeModal() { document.getElementById('edit-modal').style.display = 'none'; }
-
-    function updateItem() {
-        const data = {
-            action: 'update',
-            id: currentEditingId,
-            type: modalSelectedType === 'income' ? '수입' : '지출',
-            user: modalSelectedUser,
-            title: document.getElementById('modal-title').value,
-            amount: parseInt(document.getElementById('modal-amount').value),
-            card: document.getElementById('modal-card').value
-        };
-        fetch(googleWebAppsUrl, { method: 'POST', body: JSON.stringify(data) }).then(() => location.reload());
-    }
-
-    function deleteItem() {
-        if (!confirm("삭제하시겠습니까?")) return;
-        fetch(googleWebAppsUrl, { method: 'POST', body: JSON.stringify({action: 'delete', id: currentEditingId}) }).then(() => location.reload());
     }
 
     function renderApp() {
-        const listElement = document.getElementById('ledger-list');
-        listElement.innerHTML = '';
+        const list = document.getElementById('ledger-list'); list.innerHTML = '';
         let totalIncome = 0, totalExpense = 0;
         [...ledgerItems].reverse().forEach(item => {
             if (item.type === '수입') totalIncome += item.amount; else totalExpense += item.amount;
-            const li = document.createElement('li');
-            li.className = 'ledger-item';
-            li.onclick = () => openModal(item.id);
-            li.innerHTML = `
+            list.innerHTML += `<li class="ledger-item">
                 <div class="item-info">
                     <span class="user-badge ${item.user === '남편' ? 'husband' : 'wife'}">${item.user}</span>
                     ${(item.type !== '수입' && item.card !== '선택안함') ? `<span class="card-badge">${item.card}</span>` : ''}
                     <span class="item-title">${item.title}</span>
                 </div>
                 <div class="item-amount ${item.type === '수입' ? 'income' : 'expense'}">${item.type === '수입' ? '+ ' : '- '}${item.amount.toLocaleString()}원</div>
-            `;
-            listElement.appendChild(li);
+            </li>`;
         });
         document.getElementById('db-balance').innerText = (totalIncome - totalExpense).toLocaleString() + ' 원';
         document.getElementById('db-income').innerText = `+ ${totalIncome.toLocaleString()}원`;
         document.getElementById('db-expense').innerText = `- ${totalExpense.toLocaleString()}원`;
     }
-
     loadCloudData();
 </script>
 </body>
