@@ -31,12 +31,13 @@
         .type-btn.active.income { background-color: #e8f5e9; color: #2e7d32; border-color: #2e7d32; }
         .type-btn.active.expense { background-color: #ffebee; color: #c62828; border-color: #c62828; }
         
-        .input-row { display: flex; gap: 10px; margin-bottom: 12px; }
+        /* 카드 박스 반응형 수정 */
+        .input-row { display: flex; gap: 8px; margin-bottom: 12px; }
         input, select { padding: 12px; border: 1px solid #e2e8f0; border-radius: 8px; font-size: 15px; outline: none; background-color: #f8fafc; box-sizing: border-box; }
         input:focus, select:focus { border-color: #1e293b; background-color: #fff; }
         
-        .input-row select { width: 120px; }
-        .input-row input { flex: 1; }
+        .input-row input { flex: 1; min-width: 0; }
+        .input-row select { width: 35%; max-width: 120px; flex-shrink: 0; }
         
         .submit-btn { width: 100%; padding: 14px; background-color: #1e293b; color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; }
         .submit-btn:disabled { background-color: #64748b; cursor: not-allowed; }
@@ -119,7 +120,7 @@
         </div>
 
         <div class="input-row">
-            <input type="text" id="title" placeholder="사용 내역을 입력하세요 (예: 마트 장보기, 배달음식, 월급)">
+            <input type="text" id="title" placeholder="사용 내역을 입력하세요" style="width: 100%;">
         </div>
 
         <button class="submit-btn" onclick="addItem()">가계부 등록하기</button>
@@ -128,24 +129,21 @@
     <div class="list-section">
         <div class="list-title">최근 입출금 내역 (클릭 시 수정/삭제)</div>
         <ul class="ledger-list" id="ledger-list">
-            <div class="loading-text" id="loading-msg">구글 시트에서 최신 데이터를 불러오는 중...</div>
+            <div class="loading-text" id="loading-msg">데이터를 불러오는 중...</div>
         </ul>
     </div>
 
     <div class="modal-overlay" id="edit-modal">
         <div class="modal-content">
             <div class="modal-title">내역 수정 / 삭제</div>
-            
             <div class="type-selector">
                 <div class="type-btn husband" id="modal-user-husband" onclick="changeModalUser('남편')">남편</div>
                 <div class="type-btn wife" id="modal-user-wife" onclick="changeModalUser('아내')">아내</div>
             </div>
-
             <div class="type-selector">
                 <div class="type-btn income" id="modal-inc" onclick="selectModalType('income')">수입</div>
                 <div class="type-btn expense" id="modal-exp" onclick="selectModalType('expense')">지출</div>
             </div>
-
             <div class="input-row" style="margin-top:12px;">
                 <input type="number" id="modal-amount">
                 <select id="modal-card">
@@ -160,11 +158,9 @@
                     <option value="현금/계좌">현금/계좌</option>
                 </select>
             </div>
-
             <div class="input-row">
-                <input type="text" id="modal-title">
+                <input type="text" id="modal-title" style="width: 100%;">
             </div>
-
             <div class="modal-buttons">
                 <button class="modal-btn delete" onclick="deleteItem()">삭제</button>
                 <button class="modal-btn cancel" onclick="closeModal()">취소</button>
@@ -175,7 +171,6 @@
 </div>
 
 <script>
-    // 💡 전달해주신 신규 배포 완료 웹앱 URL 적용 완료
     const googleWebAppsUrl = "https://script.google.com/macros/s/AKfycbxucl6WBycngDBXGEorfn_ueclPlvMaEl9jZo2SqefsHTnFEPJj-QoVWLau_riTXWNV/exec"; 
 
     let ledgerItems = [];
@@ -195,14 +190,8 @@
         selectedType = type;
         document.getElementById('btn-inc').classList.toggle('active', type === 'income');
         document.getElementById('btn-exp').classList.toggle('active', type === 'expense');
-        
-        const cardSelect = document.getElementById('card');
-        if (type === 'income') {
-            cardSelect.value = '선택안함';
-            cardSelect.disabled = true;
-        } else {
-            cardSelect.disabled = false;
-        }
+        document.getElementById('card').disabled = (type === 'income');
+        if(type === 'income') document.getElementById('card').value = '선택안함';
     }
 
     function changeModalUser(user) {
@@ -215,233 +204,88 @@
         modalSelectedType = type;
         document.getElementById('modal-inc').classList.toggle('active', type === 'income');
         document.getElementById('modal-exp').classList.toggle('active', type === 'expense');
-        
-        const mCardSelect = document.getElementById('modal-card');
-        if (type === 'income') {
-            mCardSelect.value = '선택안함';
-            mCardSelect.disabled = true;
-        } else {
-            mCardSelect.disabled = false;
-        }
+        document.getElementById('modal-card').disabled = (type === 'income');
+        if(type === 'income') document.getElementById('modal-card').value = '선택안함';
     }
 
-    // [GET] 구글 드라이브(시트) 백엔드 데이터 불러오기
     function loadCloudData() {
         fetch(googleWebAppsUrl)
         .then(response => response.json())
         .then(data => {
-            if (data.error) { alert("데이터 로드 실패: " + data.error); return; }
             ledgerItems = data;
             renderApp();
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            document.getElementById('loading-msg').innerText = "데이터 로딩 오류 발생. 브라우저 강력 새로고침(Ctrl+F5)을 해주세요.";
         });
     }
 
-    // [POST - Add] 신규 데이터 등록
     function addItem() {
-        const card = document.getElementById('card').value;
-        const title = document.getElementById('title').value;
-        const amount = document.getElementById('amount').value;
-
-        if (!title || !amount) { alert('금액과 내역을 모두 입력해주세요!'); return; }
-        const uniqueId = Date.now(); 
-
-        const sendData = {
+        const data = {
             action: 'add',
-            id: uniqueId,
+            id: Date.now(),
             type: selectedType === 'income' ? '수입' : '지출',
             user: selectedUser,
-            title: title,
-            amount: parseInt(amount),
-            card: card
+            title: document.getElementById('title').value,
+            amount: parseInt(document.getElementById('amount').value),
+            card: document.getElementById('card').value
         };
-
-        const submitBtn = document.querySelector('.submit-btn');
-        submitBtn.innerText = "구글 시트에 실시간 기록 중...";
-        submitBtn.disabled = true;
-
-        fetch(googleWebAppsUrl, {
-            method: 'POST',
-            body: JSON.stringify(sendData)
-        })
-        .then(response => response.json())
-        .then(result => {
-            if(result.result === "success" || result.action === "add") {
-                ledgerItems.push({
-                    id: uniqueId,
-                    type: selectedType,
-                    user: selectedUser,
-                    title: title,
-                    amount: parseInt(amount),
-                    card: card
-                });
-                document.getElementById('title').value = '';
-                document.getElementById('amount').value = '';
-                document.getElementById('card').value = '선택안함';
-                renderApp();
-                alert("구글 스프레드시트에 정해진 열 순서대로 기록되었습니다!");
-            } else { alert("저장 실패: " + result.error); }
-        })
-        .catch(error => { alert("통신 연결 실패! 인터넷 및 웹앱 배포 상태를 점검해주세요."); })
-        .finally(() => {
-            submitBtn.innerText = "가계부 등록하기";
-            submitBtn.disabled = false;
-        });
+        fetch(googleWebAppsUrl, { method: 'POST', body: JSON.stringify(data) }).then(() => location.reload());
     }
 
     function openModal(id) {
         currentEditingId = id;
         const item = ledgerItems.find(i => i.id === id);
-        if(!item) return;
-        
         document.getElementById('modal-title').value = item.title;
         document.getElementById('modal-amount').value = item.amount;
         changeModalUser(item.user);
-        selectModalType(item.type);
+        selectModalType(item.type === '수입' ? 'income' : 'expense');
         document.getElementById('modal-card').value = item.card || '선택안함';
-
         document.getElementById('edit-modal').style.display = 'flex';
     }
 
-    function closeModal() {
-        document.getElementById('edit-modal').style.display = 'none';
-        currentEditingId = null;
-    }
+    function closeModal() { document.getElementById('edit-modal').style.display = 'none'; }
 
-    // [POST - Update] 데이터 수정
     function updateItem() {
-        const uCard = document.getElementById('modal-card').value;
-        const uTitle = document.getElementById('modal-title').value;
-        const uAmount = document.getElementById('modal-amount').value;
-
-        if (!uTitle || !uAmount) { alert('금액과 내역을 모두 입력해주세요!'); return; }
-
-        const sendData = {
+        const data = {
             action: 'update',
-            id: currentEditingId, 
+            id: currentEditingId,
             type: modalSelectedType === 'income' ? '수입' : '지출',
             user: modalSelectedUser,
-            title: uTitle,
-            amount: parseInt(uAmount),
-            card: uCard
+            title: document.getElementById('modal-title').value,
+            amount: parseInt(document.getElementById('modal-amount').value),
+            card: document.getElementById('modal-card').value
         };
-
-        const saveBtn = document.getElementById('save-btn');
-        saveBtn.innerText = "시트 고치는 중...";
-        saveBtn.disabled = true;
-
-        fetch(googleWebAppsUrl, {
-            method: 'POST',
-            body: JSON.stringify(sendData)
-        })
-        .then(response => response.json())
-        .then(result => {
-            if(result.result === "success" || result.action === "update") {
-                const item = ledgerItems.find(i => i.id === currentEditingId);
-                if(item) {
-                    item.user = modalSelectedUser;
-                    item.title = uTitle;
-                    item.amount = parseInt(uAmount);
-                    item.type = modalSelectedType;
-                    item.card = uCard;
-                }
-                closeModal();
-                renderApp();
-                alert("구글 시트 내역이 안전하게 수정되었습니다!");
-            } else { alert("수정 실패!"); }
-        })
-        .catch(error => { alert("통신 오류로 인해 수정 처리가 되지 않았습니다."); })
-        .finally(() => {
-            saveBtn.innerText = "수정완료";
-            saveBtn.disabled = false;
-        });
+        fetch(googleWebAppsUrl, { method: 'POST', body: JSON.stringify(data) }).then(() => location.reload());
     }
 
-    // [POST - Delete] 데이터 삭제
     function deleteItem() {
-        if (!confirm("정말 이 내역을 삭제하시겠습니까? 구글 시트에서도 완벽히 제거됩니다.")) return;
-
-        const sendData = { action: 'delete', id: currentEditingId };
-        const deleteBtn = document.querySelector('.modal-btn.delete');
-        deleteBtn.innerText = "삭제 중...";
-        deleteBtn.disabled = true;
-
-        fetch(googleWebAppsUrl, {
-            method: 'POST',
-            body: JSON.stringify(sendData)
-        })
-        .then(response => response.json())
-        .then(result => {
-            if(result.result === "success" || result.action === "delete") {
-                ledgerItems = ledgerItems.filter(i => i.id !== currentEditingId);
-                closeModal();
-                renderApp();
-                alert("내역이 영구적으로 삭제되었습니다.");
-            } else { alert("삭제 실패!"); }
-        })
-        .catch(error => { alert("통신 오류로 인해 삭제에 실패했습니다."); })
-        .finally(() => {
-            deleteBtn.innerText = "삭제";
-            deleteBtn.disabled = false;
-        });
+        if (!confirm("삭제하시겠습니까?")) return;
+        fetch(googleWebAppsUrl, { method: 'POST', body: JSON.stringify({action: 'delete', id: currentEditingId}) }).then(() => location.reload());
     }
 
-    // 앱 화면 및 잔액 대시보드 새로고침 렌더링
     function renderApp() {
         const listElement = document.getElementById('ledger-list');
         listElement.innerHTML = '';
-
-        if (ledgerItems.length === 0) {
-            listElement.innerHTML = '<div class="loading-text">기록된 가계부 내역이 없습니다. 첫 지출/수입을 등록해 보세요!</div>';
-            document.getElementById('db-balance').innerText = "0 원";
-            document.getElementById('db-income').innerText = "+ 0원";
-            document.getElementById('db-expense').innerText = "- 0원";
-            return;
-        }
-
-        let totalIncome = 0;
-        let totalExpense = 0;
-        const displayItems = [...ledgerItems].reverse(); // 최신 데이터가 위로 오도록 정렬
-
-        displayItems.forEach(item => {
-            if (item.type === 'income') { totalIncome += item.amount; } 
-            else { totalExpense += item.amount; }
-
+        let totalIncome = 0, totalExpense = 0;
+        [...ledgerItems].reverse().forEach(item => {
+            if (item.type === '수입') totalIncome += item.amount; else totalExpense += item.amount;
             const li = document.createElement('li');
             li.className = 'ledger-item';
             li.onclick = () => openModal(item.id);
-
-            const userClass = item.user === '남편' ? 'husband' : 'wife';
-            const sign = item.type === 'income' ? '+ ' : '- ';
-            const amountClass = item.type === 'income' ? 'income' : 'expense';
-            
-            const cardBadgeHtml = (item.type === 'expense' && item.card && item.card !== '선택안함') 
-                ? `<span class="card-badge">${item.card}</span>` 
-                : '';
-
             li.innerHTML = `
                 <div class="item-info">
-                    <span class="user-badge ${userClass}">${item.user}</span>
-                    ${cardBadgeHtml}
+                    <span class="user-badge ${item.user === '남편' ? 'husband' : 'wife'}">${item.user}</span>
+                    ${(item.type !== '수입' && item.card !== '선택안함') ? `<span class="card-badge">${item.card}</span>` : ''}
                     <span class="item-title">${item.title}</span>
                 </div>
-                <div class="item-amount ${amountClass}">${sign}${item.amount.toLocaleString()}원</div>
+                <div class="item-amount ${item.type === '수입' ? 'income' : 'expense'}">${item.type === '수입' ? '+ ' : '- '}${item.amount.toLocaleString()}원</div>
             `;
             listElement.appendChild(li);
         });
-
-        const balance = totalIncome - totalExpense;
-        document.getElementById('db-balance').innerText = `${balance.toLocaleString()} 원`;
+        document.getElementById('db-balance').innerText = (totalIncome - totalExpense).toLocaleString() + ' 원';
         document.getElementById('db-income').innerText = `+ ${totalIncome.toLocaleString()}원`;
         document.getElementById('db-expense').innerText = `- ${totalExpense.toLocaleString()}원`;
     }
 
-    // 앱 실행 시 구글 시트 백엔드와 즉시 동기화
     loadCloudData();
 </script>
-
 </body>
 </html>
