@@ -449,18 +449,16 @@
             li.className = 'ledger-item';
             li.onclick = () => openModal(item.id);
 
-            // [수정 핵심 ①] 글자 배지를 없애는 대신 줄(li) 전체 배경색을 남편(블루)/아내(핑크) 색상으로 변경
+            // [수정 핵심] 기존 색상값에 투명도를 주어 음영률을 원래의 30% 수준(alpha: 0.3)으로 연하게 다운시켰습니다.
             if (item.user === '남편') {
-                li.style.backgroundColor = '#e0f2fe'; 
+                li.style.backgroundColor = 'rgba(224, 242, 254, 0.3)'; 
             } else if (item.user === '아내') {
-                li.style.backgroundColor = '#fce7f3'; 
+                li.style.backgroundColor = 'rgba(252, 231, 243, 0.3)'; 
             }
 
             const sign = item.type === 'income' ? '+ ' : '- ';
             const amountClass = item.type === 'income' ? 'income' : 'expense';
             
-            // [수정 핵심 ②] 원래 남편/아내 텍스트가 들어가던 자리에 '카드종류'가 깔끔하게 노출되도록 배치
-            // 수입일 때는 카드가 없으므로 '수입', 카드를 지정하지 않았을 때는 '현금'으로 보기 좋게 처리합니다.
             const cardText = (item.card && item.card !== '선택안함') ? item.card : (item.type === 'income' ? '수입' : '현금');
             const formattedDate = item.date ? item.date.substring(5) : '';
 
