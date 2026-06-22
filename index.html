@@ -256,16 +256,16 @@
         const catSelect = document.getElementById('category');
         const modalCatSelect = document.getElementById('modal-category');
         
-        const currentVal = catSelect.value || '기타';
-        const currentModalVal = modalCatSelect.value || '기타';
+        const currentVal = catSelect.value || '선택안함';
+        const currentModalVal = modalCatSelect.value || '선택안함';
 
-        const optionsHtml = categories.map(cat => `<option value="${cat}">${cat}</option>`).join('');
+        const optionsHtml = `<option value="선택안함">카테고리 선택</option>` + categories.map(cat => `<option value="${cat}">${cat}</option>`).join('');
         
         catSelect.innerHTML = optionsHtml;
         modalCatSelect.innerHTML = optionsHtml;
 
-        catSelect.value = categories.includes(currentVal) ? currentVal : '기타';
-        modalCatSelect.value = categories.includes(currentModalVal) ? currentModalVal : '기타';
+        catSelect.value = categories.includes(currentVal) ? currentVal : '선택안함';
+        modalCatSelect.value = categories.includes(currentModalVal) ? currentModalVal : '선택안함';
     }
 
     function openCategoryModal() {
@@ -451,6 +451,7 @@
         const category = document.getElementById('category').value; 
         
         if (!date || !title || !amount) { alert('날짜, 금액, 내역을 모두 입력해주세요!'); return; }
+        if (category === '선택안함') { alert('카테고리를 선택해주세요!'); return; }
         const uniqueId = Date.now();
         
         const sendData = { action: 'add', id: uniqueId, date, type: selectedType === 'income' ? '수입' : '지출', user: selectedUser, title, amount: parseInt(amount), card, category };
