@@ -55,7 +55,7 @@
         .list-title { font-size: 16px; font-weight: bold; color: #1e293b; margin-bottom: 15px; }
         .ledger-list { list-style: none; padding: 0; margin: 0; }
         
-        /* 구분선과 배경색 */
+        /* 공통 내역 아이템 스타일 */
         .ledger-item { display: flex; justify-content: space-between; align-items: center; padding: 14px 10px; border-bottom: 1px solid #e2e8f0; cursor: pointer; }
         .ledger-item.남편 { background-color: #f0f9ff; }
         .ledger-item.아내 { background-color: #fff1f2; }
@@ -64,7 +64,6 @@
         .item-info { display: flex; align-items: center; gap: 8px; }
         .card-badge { font-size: 11px; background-color: #ffffff; color: #475569; padding: 3px 6px; border-radius: 4px; border: 1px solid #cbd5e1; }
         
-        /* 뱃지 스타일 - 부드러운 파스텔 톤 */
         .user-badge { font-size: 10px; font-weight: bold; padding: 3px 7px; border-radius: 12px; }
         .user-badge.남편 { background-color: #bae6fd; color: #075985; }
         .user-badge.아내 { background-color: #fecdd3; color: #9f1239; }
@@ -79,17 +78,15 @@
         .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); justify-content: center; align-items: center; z-index: 100; }
         .card-modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 200; justify-content: center; align-items: flex-start; padding-top: 50px; overflow-y: auto; }
         .modal-content { background: white; padding: 20px; border-radius: 16px; width: 85%; max-width: 380px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
-        .modal-title { font-size: 16px; font-weight: bold; margin-bottom: 15px; color: #1e293b; }
+        .modal-header-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+        .modal-title { font-size: 16px; font-weight: bold; color: #1e293b; }
         .modal-buttons { display: flex; gap: 10px; margin-top: 15px; }
         .modal-btn { flex: 1; padding: 12px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 14px; }
         .modal-btn.save { background-color: #1e293b; color: white; }
         .modal-btn.delete { background-color: #ef4444; color: white; }
         .modal-btn.cancel { background-color: #e2e8f0; color: #475569; }
         
-        .filter-group { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 15px; }
-        .filter-btn { padding: 6px 12px; border: 1px solid #e2e8f0; border-radius: 20px; cursor: pointer; font-size: 11px; background: #fff; color: #64748b; }
-        .filter-btn.active { background: #1e293b; color: white; border-color: #1e293b; font-weight: bold; }
-        .modal-item { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid #f1f5f9; font-size: 13px; }
+        #card-sort-select { padding: 6px; border-radius: 6px; border: 1px solid #cbd5e1; font-size: 12px; background: white; }
     </style>
 </head>
 <body>
@@ -98,7 +95,7 @@
     <div class="header">
         <h1>쑥잠이네 가계부</h1>
         <a href="https://docs.google.com/spreadsheets/d/1AN2YYoW63gLwkXVi_jpmuMjkrboNkOv5PPoKM0UVfjI/edit?gid=894136498#gid=894136498" target="_blank" class="sheet-btn" style="margin-bottom: 10px;">구글 시트 바로가기</a>
-        <button id="card-toggle-btn" onclick="toggleCardSection()" class="sheet-btn" style="width: 100%; border: none; cursor: pointer; font-family: inherit; margin-bottom: 10px;">💳 이번 달 카드별 지출 보기 ▾</button>
+        <button id="card-toggle-btn" onclick="toggleCardSection()" class="sheet-btn" style="width: 100%; border: none; cursor: pointer; font-family: inherit; margin-bottom: 10px;">💳 0월 카드별 지출 보기 ▾</button>
         <div id="card-section-wrapper" style="display: none; margin-bottom: 15px; background: rgba(255,255,255,0.05); padding: 10px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.1);">
             <div class="card-grid" id="card-summary-grid"></div>
         </div>
@@ -158,13 +155,15 @@
 
     <div class="card-modal-overlay" id="card-modal" onclick="closeCardModal()">
         <div class="modal-content" onclick="event.stopPropagation()">
-            <div class="modal-title" id="card-modal-title">카드 상세</div>
-            <div class="filter-group">
-                <button class="filter-btn active" id="btn-sort-date_desc" onclick="setCardSort('date_desc')">최신순</button>
-                <button class="filter-btn" id="btn-sort-date_asc" onclick="setCardSort('date_asc')">과거순</button>
-                <button class="filter-btn" id="btn-sort-amt_desc" onclick="setCardSort('amt_desc')">높은금액</button>
-                <button class="filter-btn" id="btn-sort-amt_asc" onclick="setCardSort('amt_asc')">낮은금액</button>
-                <button class="filter-btn" id="btn-sort-name" onclick="setCardSort('name')">가나다순</button>
+            <div class="modal-header-row">
+                <div class="modal-title" id="card-modal-title">카드 상세</div>
+                <select id="card-sort-select" onchange="setCardSort(this.value)">
+                    <option value="date_desc">최신순</option>
+                    <option value="date_asc">과거순</option>
+                    <option value="amt_desc">높은금액</option>
+                    <option value="amt_asc">낮은금액</option>
+                    <option value="name">가나다순</option>
+                </select>
             </div>
             <div id="card-modal-list" style="max-height: 300px; overflow-y: auto;"></div>
             <button class="modal-btn cancel" style="margin-top:15px; width:100%;" onclick="closeCardModal()">닫기</button>
@@ -224,6 +223,13 @@
     let currentCardModalName = '';
     let currentCardSort = 'date_desc'; 
 
+    // 초기 버튼 텍스트 설정
+    function initHeader() {
+        const tzOffset = new Date().getTimezoneOffset() * 60000;
+        const currentMonthNum = (new Date(Date.now() - tzOffset)).toISOString().substring(5, 7);
+        document.getElementById('card-toggle-btn').innerText = `💳 ${parseInt(currentMonthNum)}월 카드별 지출 보기 ▾`;
+    }
+
     function setTodayDate() {
         const tzOffset = new Date().getTimezoneOffset() * 60000;
         const localISOTime = (new Date(Date.now() - tzOffset)).toISOString().slice(0, 10);
@@ -234,7 +240,8 @@
         const wrapper = document.getElementById('card-section-wrapper');
         const btn = document.getElementById('card-toggle-btn');
         const tzOffset = new Date().getTimezoneOffset() * 60000;
-        const currentMonthNum = (new Date(Date.now() - tzOffset)).toISOString().substring(5, 7);
+        const currentMonthNum = parseInt((new Date(Date.now() - tzOffset)).toISOString().substring(5, 7));
+        
         if (wrapper.style.display === 'none' || wrapper.style.display === '') {
             wrapper.style.display = 'block';
             btn.innerText = `💳 ${currentMonthNum}월 카드별 지출 접기 ▴`;
@@ -247,15 +254,15 @@
     function openCardModal(cardName) {
         currentCardModalName = cardName;
         document.getElementById('card-modal').style.display = 'flex';
+        // 정렬 값 동기화
+        document.getElementById('card-sort-select').value = currentCardSort;
         renderCardModal();
     }
     function closeCardModal() {
         document.getElementById('card-modal').style.display = 'none';
     }
-    function setCardSort(type) {
-        currentCardSort = type;
-        document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-        document.getElementById(`btn-sort-${type}`).classList.add('active');
+    function setCardSort(val) {
+        currentCardSort = val;
         renderCardModal();
     }
 
@@ -274,14 +281,14 @@
         else filtered.sort((a,b) => new Date(b.date) - new Date(a.date));
 
         modalList.innerHTML = filtered.map(item => `
-            <div class="modal-item">
+            <li class="ledger-item ${item.user}" onclick="openModal(${item.id}); closeCardModal();">
                 <div class="item-info">
                     <span class="user-badge ${item.user}">${item.user}</span>
                     <span style="color:#94a3b8; font-size:11px;">${item.date.substring(5)}</span>
                     <span style="font-weight:500;">${item.title}</span>
                 </div>
-                <span style="font-weight:bold;">${item.amount.toLocaleString()}원</span>
-            </div>
+                <span class="item-amount expense">${item.amount.toLocaleString()}원</span>
+            </li>
         `).join('') || '<div style="text-align:center; padding:20px; color:#94a3b8;">내역이 없습니다.</div>';
     }
 
@@ -377,6 +384,8 @@
         document.getElementById('db-expense').innerText = `- ${totalExpense.toLocaleString()}원`;
     }
 
+    // 페이지 시작 시 실행
+    initHeader();
     setTodayDate();
     loadCloudData();
 </script>
