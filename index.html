@@ -28,7 +28,7 @@
         /* 입력 섹션 */
         .input-section { padding: 20px; border-bottom: 8px solid #f5f7fa; }
         .type-selector { display: flex; gap: 10px; margin-bottom: 12px; }
-        .type-btn { flex: 1; padding: 12px; border: 1px solid #e2e8f0; border-radius: 8px; text-align: center; font-size: 14px; font-weight: bold; cursor: pointer; background-color: #f8fafc; color: #64748b; transition: all 0.2s; user-select: none; -webkit-user-select: none; }
+        .type-btn { flex: 1; padding: 12px; border: 1px solid #e2e8f0; border-radius: 8px; text-align: center; font-size: 14px; font-weight: bold; cursor: pointer; background-color: #f8fafc; color: #64748b; transition: all 0.2s; user-select: none; }
         
         .type-btn.active.husband { background-color: #e0f2fe; color: #0369a1; border-color: #0369a1; }
         .type-btn.active.wife { background-color: #fce7f3; color: #be185d; border-color: #be185d; }
@@ -46,10 +46,8 @@
         .input-row { display: flex; gap: 10px; margin-bottom: 12px; }
         input, select { padding: 12px; border: 1px solid #e2e8f0; border-radius: 8px; font-size: 15px; outline: none; background-color: #f8fafc; box-sizing: border-box; }
         input:focus, select:focus { border-color: #1e293b; background-color: #fff; }
-        
         .input-row select { width: 35%; flex-shrink: 0; } 
         .input-row input { flex: 1; min-width: 0; } 
-        
         .submit-btn { width: 100%; padding: 14px; background-color: #1e293b; color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; }
         
         /* 리스트 내역 */
@@ -66,7 +64,10 @@
         .item-info { display: flex; align-items: center; gap: 8px; }
         .card-badge { font-size: 11px; background-color: #ffffff; color: #475569; padding: 3px 6px; border-radius: 4px; border: 1px solid #cbd5e1; }
         
-        .user-badge { font-size: 10px; font-weight: bold; padding: 2px 6px; border-radius: 12px; border: 1px solid transparent; display: none; }
+        /* 뱃지 스타일 */
+        .user-badge { font-size: 10px; font-weight: bold; padding: 2px 6px; border-radius: 12px; color: white; }
+        .user-badge.남편 { background-color: #0369a1; }
+        .user-badge.아내 { background-color: #be185d; }
         
         .date-text { font-size: 12px; color: #94a3b8; }
         .item-title { font-size: 15px; color: #334155; font-weight: 500; }
@@ -86,7 +87,7 @@
         .modal-btn.cancel { background-color: #e2e8f0; color: #475569; }
         
         .filter-group { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 15px; }
-        .filter-btn { padding: 6px 12px; border: 1px solid #e2e8f0; border-radius: 20px; cursor: pointer; font-size: 11px; background: #fff; color: #64748b; transition: all 0.2s; }
+        .filter-btn { padding: 6px 12px; border: 1px solid #e2e8f0; border-radius: 20px; cursor: pointer; font-size: 11px; background: #fff; color: #64748b; }
         .filter-btn.active { background: #1e293b; color: white; border-color: #1e293b; font-weight: bold; }
         .modal-item { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid #f1f5f9; font-size: 13px; }
     </style>
@@ -97,7 +98,6 @@
     <div class="header">
         <h1>쑥잠이네 가계부</h1>
         <a href="https://docs.google.com/spreadsheets/d/1AN2YYoW63gLwkXVi_jpmuMjkrboNkOv5PPoKM0UVfjI/edit?gid=894136498#gid=894136498" target="_blank" class="sheet-btn" style="margin-bottom: 10px;">구글 시트 바로가기</a>
-        
         <button id="card-toggle-btn" onclick="toggleCardSection()" class="sheet-btn" style="width: 100%; border: none; cursor: pointer; font-family: inherit; margin-bottom: 10px;">💳 이번 달 카드별 지출 보기 ▾</button>
         <div id="card-section-wrapper" style="display: none; margin-bottom: 15px; background: rgba(255,255,255,0.05); padding: 10px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.1);">
             <div class="card-grid" id="card-summary-grid"></div>
@@ -276,7 +276,7 @@
         modalList.innerHTML = filtered.map(item => `
             <div class="modal-item">
                 <div class="item-info">
-                    <span style="font-size:10px; font-weight:bold; padding:2px 6px; border-radius:12px; border:1px solid #cbd5e1; background-color:${item.user === '남편' ? '#f0f9ff' : '#fff1f2'}; color:${item.user === '남편' ? '#0369a1' : '#be185d'};">${item.user}</span>
+                    <span class="user-badge ${item.user}">${item.user}</span>
                     <span style="color:#94a3b8; font-size:11px;">${item.date.substring(5)}</span>
                     <span style="font-weight:500;">${item.title}</span>
                 </div>
@@ -346,11 +346,11 @@
                 }
             }
             const li = document.createElement('li');
-            // 여기에서 ${item.user}를 클래스로 추가하여 배경색 적용
             li.className = `ledger-item ${item.user}`; 
             li.onclick = () => openModal(item.id);
             li.innerHTML = `
                 <div class="item-info">
+                    <span class="user-badge ${item.user}">${item.user}</span>
                     <span class="card-badge">${item.card || '현금/계좌'}</span>
                     <span class="date-text">${item.date.substring(5)}</span>
                     <span class="item-title">${item.title}</span>
