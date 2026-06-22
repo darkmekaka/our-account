@@ -12,7 +12,7 @@
         .header { background-color: #1e293b; color: white; padding: 25px 20px; border-bottom-left-radius: 24px; border-bottom-right-radius: 24px; }
         .header h1 { margin: 0 0 10px 0; font-size: 23px; font-weight: bold; text-align: center; }
         
-        .sheet-btn { display: block; text-align: center; background: rgba(255,255,255,0.1); color: #cbd5e1; padding: 6px; border-radius: 6px; text-decoration: none; font-size: 12px; margin-bottom: 15px; }
+        .sheet-btn { display: block; text-align: center; background: rgba(255,255,255,0.1); color: #cbd5e1; padding: 6px; border-radius: 6px; text-decoration: none; font-size: 12px; margin-bottom: 10px; }
         .sheet-btn:hover { background: rgba(255,255,255,0.2); color: #ffffff; }
 
         .balance-box { margin-top: 10px; margin-bottom: 20px; text-align: right; }
@@ -55,13 +55,12 @@
         .list-title { font-size: 16px; font-weight: bold; color: #1e293b; margin-bottom: 15px; }
         .ledger-list { list-style: none; padding: 0; margin: 0; }
         
-        /* 공통 내역 아이템 스타일 */
+        /* 공통 내역 아이템 스타일 (상하 분할 대응 구조) */
         .ledger-item { display: flex; justify-content: space-between; align-items: center; padding: 14px 10px; border-bottom: 1px solid #e2e8f0; cursor: pointer; }
         .ledger-item.남편 { background-color: #f0f9ff; }
         .ledger-item.아내 { background-color: #fff1f2; }
         .ledger-item:hover { opacity: 0.8; }
         
-        .item-info { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
         .card-badge { font-size: 11px; background-color: #ffffff; color: #475569; padding: 3px 6px; border-radius: 4px; border: 1px solid #cbd5e1; }
         
         .user-badge { font-size: 10px; font-weight: bold; padding: 3px 7px; border-radius: 12px; }
@@ -88,7 +87,6 @@
         
         #card-sort-select { padding: 6px; border-radius: 6px; border: 1px solid #cbd5e1; font-size: 12px; background: white; }
 
-        /* 로딩 스피너 애니메이션 */
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     </style>
 </head>
@@ -109,10 +107,16 @@
             <input type="month" id="month-picker" onchange="changeMonth(this.value)" style="padding: 8px 14px; font-size: 15px; border-radius: 8px; border: none; background-color: #334155; color: #ffffff; font-weight: bold; font-family: inherit; text-align: center; cursor: pointer; outline: none;">
         </div>
 
-        <a href="https://docs.google.com/spreadsheets/d/1AN2YYoW63gLwkXVi_jpmuMjkrboNkOv5PPoKM0UVfjI/edit?gid=894136498#gid=894136498" target="_blank" class="sheet-btn" style="margin-bottom: 10px;">구글 시트 바로가기</a>
-        <button id="card-toggle-btn" onclick="toggleCardSection()" class="sheet-btn" style="width: 100%; border: none; cursor: pointer; font-family: inherit; margin-bottom: 10px;">💳 0월 카드별 지출 보기 ▾</button>
-        <div id="card-section-wrapper" style="display: none; margin-bottom: 15px; background: rgba(255,255,255,0.05); padding: 10px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.1);">
+        <a href="https://docs.google.com/spreadsheets/d/1AN2YYoW63gLwkXVi_jpmuMjkrboNkOv5PPoKM0UVfjI/edit?gid=894136498#gid=894136498" target="_blank" class="sheet-btn">구글 시트 바로가기</a>
+        
+        <button id="card-toggle-btn" onclick="toggleCardSection()" class="sheet-btn" style="width: 100%; border: none; cursor: pointer; font-family: inherit;">💳 0월 카드별 지출 보기 ▾</button>
+        <div id="card-section-wrapper" style="display: none; margin-bottom: 10px; background: rgba(255,255,255,0.05); padding: 10px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.1);">
             <div class="card-grid" id="card-summary-grid"></div>
+        </div>
+
+        <button id="category-toggle-btn" onclick="toggleCategorySection()" class="sheet-btn" style="width: 100%; border: none; cursor: pointer; font-family: inherit;">📊 0월 카테고리별 지출 보기 ▾</button>
+        <div id="category-section-wrapper" style="display: none; margin-bottom: 15px; background: rgba(255,255,255,0.05); padding: 10px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.1);">
+            <div class="card-grid" id="category-summary-grid"></div>
         </div>
 
         <div class="balance-box">
@@ -169,7 +173,7 @@
 
     <div class="list-section">
         <div class="list-title" style="display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap;">
-            <span>선택 월 입출금 내역</span>
+            <span id="dynamic-list-title">선택 월 입출금 내역</span>
             <select id="list-category-filter" onchange="openCategoryDetailModal(this.value)" style="padding: 6px 10px; font-size: 13px; border-radius: 6px; border: 1px solid #cbd5e1; background: white; font-weight: normal; font-family: inherit; width: auto; margin: 0;">
                 <option value="">카테고리별 합산 보기</option>
             </select>
@@ -184,8 +188,7 @@
             <div id="category-detail-summary" style="margin: 10px 0 15px 0; padding: 14px; background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; font-size: 14px;">
                 </div>
             
-            <div id="category-detail-list" style="max-height: 280px; overflow-y: auto; border-top: 1px dashed #cbd5e1; padding-top: 5px;">
-                </div>
+            <div id="category-detail-list" style="max-height: 250px; overflow-y: auto; border-top: 1px dashed #cbd5e1; padding-top: 5px;"></div>
             <button class="modal-btn cancel" style="margin-top:15px; width:100%;" onclick="closeCategoryDetailModal()">닫기</button>
         </div>
     </div>
@@ -293,23 +296,25 @@
         renderCategoryDropdowns();
     }
 
+    /* ================= 요구사항 1번 구현 ================= */
     function renderCategoryDropdowns() {
         const catSelect = document.getElementById('category');
         const modalCatSelect = document.getElementById('modal-category');
         const filterSelect = document.getElementById('list-category-filter');
         
-        const currentVal = catSelect.value || '기타';
-        const currentModalVal = modalCatSelect.value || '기타';
+        const currentVal = catSelect.value;
+        const currentModalVal = modalCatSelect.value;
 
         const optionsHtml = categories.map(cat => `<option value="${cat}">${cat}</option>`).join('');
         
-        catSelect.innerHTML = optionsHtml;
-        modalCatSelect.innerHTML = optionsHtml;
+        // 임의 선택되지 않도록 비활성화된 Placeholder 제공
+        catSelect.innerHTML = '<option value="" disabled selected hidden>카테고리 선택</option>' + optionsHtml;
+        modalCatSelect.innerHTML = '<option value="" disabled selected hidden>카테고리 선택</option>' + optionsHtml;
         
-        filterSelect.innerHTML = '<option value="">카테고리별 합산 보기</option>' + categories.map(cat => `<option value="${cat}">${cat}</option>`).join('');
+        filterSelect.innerHTML = '<option value="">카테고리별 합산 보기</option>' + optionsHtml;
 
-        catSelect.value = categories.includes(currentVal) ? currentVal : '기타';
-        modalCatSelect.value = categories.includes(currentModalVal) ? currentModalVal : '기타';
+        if(currentVal && categories.includes(currentVal)) catSelect.value = currentVal;
+        if(currentModalVal && categories.includes(currentModalVal)) modalCatSelect.value = currentModalVal;
     }
 
     function openCategoryModal() {
@@ -338,7 +343,6 @@
         if (categories.includes(name)) { alert('이미 존재하는 카테고리입니다.'); return; }
         
         showLoading("카테고리를 클라우드에 추가하고 있습니다...");
-
         const sendData = { action: 'addCategory', name: name };
         
         fetch(googleWebAppsUrl, { method: 'POST', body: JSON.stringify(sendData) })
@@ -362,7 +366,6 @@
         if (!confirm(`'${name}' 카테고리를 완전히 삭제하시겠습니까?`)) return;
         
         showLoading("카테고리를 클라우드에서 제거하고 있습니다...");
-
         const sendData = { action: 'deleteCategory', name: name };
         
         fetch(googleWebAppsUrl, { method: 'POST', body: JSON.stringify(sendData) })
@@ -384,17 +387,29 @@
         const tzOffset = new Date().getTimezoneOffset() * 60000;
         selectedMonth = (new Date(Date.now() - tzOffset)).toISOString().substring(0, 7);
         document.getElementById('month-picker').value = selectedMonth;
-        updateCardToggleBtnText();
+        updateToggleBtnTexts();
     }
 
-    function updateCardToggleBtnText() {
+    /* ================= 요구사항 5번 관련 토글 제어 텍스트 매핑 ================= */
+    function updateToggleBtnTexts() {
         const monthNum = parseInt(selectedMonth.substring(5, 7));
-        const btn = document.getElementById('card-toggle-btn');
-        const wrapper = document.getElementById('card-section-wrapper');
-        if (wrapper.style.display === 'block') {
-            btn.innerText = `💳 ${monthNum}월 카드별 지출 접기 ▴`;
+        
+        // 카드별 제어 텍스트
+        const cardBtn = document.getElementById('card-toggle-btn');
+        const cardWrapper = document.getElementById('card-section-wrapper');
+        if (cardWrapper.style.display === 'block') {
+            cardBtn.innerText = `💳 ${monthNum}월 카드별 지출 접기 ▴`;
         } else {
-            btn.innerText = `💳 ${monthNum}월 카드별 지출 보기 ▾`;
+            cardBtn.innerText = `💳 ${monthNum}월 카드별 지출 보기 ▾`;
+        }
+
+        // 카테고리별 제어 텍스트
+        const catBtn = document.getElementById('category-toggle-btn');
+        const catWrapper = document.getElementById('category-section-wrapper');
+        if (catWrapper.style.display === 'block') {
+            catBtn.innerText = `📊 ${monthNum}월 카테고리별 지출 접기 ▴`;
+        } else {
+            catBtn.innerText = `📊 ${monthNum}월 카테고리별 지출 보기 ▾`;
         }
     }
 
@@ -407,22 +422,21 @@
     function changeMonth(val) {
         if (!val) return;
         selectedMonth = val;
-        updateCardToggleBtnText();
+        updateToggleBtnTexts();
         renderApp();
     }
 
     function toggleCardSection() {
         const wrapper = document.getElementById('card-section-wrapper');
-        const btn = document.getElementById('card-toggle-btn');
-        const monthNum = parseInt(selectedMonth.substring(5, 7));
-        
-        if (wrapper.style.display === 'none' || wrapper.style.display === '') {
-            wrapper.style.display = 'block';
-            btn.innerText = `💳 ${monthNum}월 카드별 지출 접기 ▴`;
-        } else {
-            wrapper.style.display = 'none';
-            btn.innerText = `💳 ${monthNum}월 카드별 지출 보기 ▾`;
-        }
+        wrapper.style.display = (wrapper.style.display === 'none' || wrapper.style.display === '') ? 'block' : 'none';
+        updateToggleBtnTexts();
+    }
+
+    /* ================= 요구사항 5번 토글 핸들러 함수 ================= */
+    function toggleCategorySection() {
+        const wrapper = document.getElementById('category-section-wrapper');
+        wrapper.style.display = (wrapper.style.display === 'none' || wrapper.style.display === '') ? 'block' : 'none';
+        updateToggleBtnTexts();
     }
 
     function openCardModal(cardName) {
@@ -451,20 +465,24 @@
         else if(currentCardSort === 'date_asc') filtered.sort((a,b) => new Date(a.date) - new Date(b.date));
         else filtered.sort((a,b) => new Date(b.date) - new Date(a.date));
 
+        /* ================= 요구사항 3번 반영 (카드상세 목록 레이아웃 변경) ================= */
         modalList.innerHTML = filtered.map(item => `
             <li class="ledger-item ${item.user}" onclick="openModal(${item.id}); closeCardModal();">
-                <div class="item-info">
-                    <span class="user-badge ${item.user}">${item.user}</span>
-                    <span class="card-badge">${item.category || '기타'}</span>
-                    <span style="color:#94a3b8; font-size:11px;">${item.date.substring(5)}</span>
-                    <span style="font-weight:500;">${item.title}</span>
+                <div style="display: flex; flex-direction: column; gap: 5px; flex: 1;">
+                    <div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
+                        <span class="user-badge ${item.user}">${item.user}</span>
+                        <span class="date-text">${item.date.substring(5)}</span>
+                        <span class="card-badge">${item.card || '현금/계좌'}</span>
+                        <span class="card-badge" style="background-color: #e2e8f0;">${item.category || '기타'}</span>
+                    </div>
+                    <div class="item-title" style="padding-left: 2px;">${item.title}</div>
                 </div>
-                <span class="item-amount expense">${item.amount.toLocaleString()}원</span>
+                <span class="item-amount expense" style="margin-left:10px; flex-shrink:0;">${item.amount.toLocaleString()}원</span>
             </li>
         `).join('') || '<div style="text-align:center; padding:20px; color:#94a3b8;">내역이 없습니다.</div>';
     }
 
-    /* ================= 주요 수정 영역 ================= */
+    /* ================= 요구사항 2번 및 3번 반영 (카테고리 상세 팝업창 개선) ================= */
     function openCategoryDetailModal(catName) {
         if (!catName) return;
         document.getElementById('category-detail-modal').style.display = 'flex';
@@ -472,40 +490,62 @@
         const monthNum = parseInt(selectedMonth.substring(5, 7));
         document.getElementById('category-detail-title').innerText = `${monthNum}월 내역 정보`;
         
-        // 현재 선택된 월 조건과 카테고리 필터링 매칭
         let filtered = ledgerItems.filter(i => i.category === catName && i.date && i.date.startsWith(selectedMonth));
         
         let totalExp = 0;
+        let cardTotalsMap = {}; // 특정 카테고리 내부의 카드 지출 합산 오브젝트
+
         filtered.forEach(i => {
-            if (i.type === 'expense') totalExp += i.amount;
+            if (i.type === 'expense') {
+                totalExp += i.amount;
+                let cardKey = i.card || '현금/계좌';
+                cardTotalsMap[cardKey] = (cardTotalsMap[cardKey] || 0) + i.amount;
+            }
         });
         
-        // 합산 박스 렌더링 변경 (요청 사항 반영)
+        // 요구사항 2번: 카드목록별 합산 결과 HTML 동적 매핑
+        let cardSummaryHtml = Object.keys(cardTotalsMap).map(card => `
+            <div style="display: flex; justify-content: space-between; font-size: 13px; color: #475569; margin-top: 5px; padding-left: 8px;">
+                <span>• ${card}</span>
+                <span>${cardTotalsMap[card].toLocaleString()}원</span>
+            </div>
+        `).join('');
+
         const summaryBox = document.getElementById('category-detail-summary');
         summaryBox.innerHTML = `
-            <div style="display: flex; justify-content: space-between; align-items: center; font-weight: bold; color: #1e293b;">
-                <span>[${catName}] 총 지출</span>
-                <span style="color: #c62828; font-size: 16px;">${totalExp.toLocaleString()}원</span>
+            <div style="border-bottom: 1px solid #e2e8f0; padding-bottom: 8px; margin-bottom: 8px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; font-weight: bold; color: #1e293b;">
+                    <span>[${catName}] 총 지출</span>
+                    <span style="color: #c62828; font-size: 16px;">${totalExp.toLocaleString()}원</span>
+                </div>
+            </div>
+            <div>
+                <div style="font-size: 12px; font-weight: bold; color: #64748b;">💳 카드별 합산 내역</div>
+                ${cardSummaryHtml || '<div style="font-size:12px; color:#94a3b8; padding-top:4px; padding-left:8px;">지출 카드 정보가 없습니다.</div>'}
             </div>
         `;
         
-        // 세부 리스트 목록 렌더링
+        // 요구사항 3번: 카테고리 상세 내부의 내역 리스트도 동일하게 상하 분할 적용
         const listContainer = document.getElementById('category-detail-list');
         listContainer.innerHTML = filtered.map(item => `
             <div class="ledger-item ${item.user}" style="border-radius:6px; margin-bottom:5px;" onclick="openModal(${item.id}); closeCategoryDetailModal();">
-                <div class="item-info">
-                    <span class="user-badge ${item.user}">${item.user}</span>
-                    <span class="card-badge">${item.card || '현금/계좌'}</span>
-                    <span style="font-size:12px; color:#94a3b8;">${item.date.substring(5)}</span>
-                    <span style="color:#334155; font-weight:500;">${item.title}</span>
+                <div style="display: flex; flex-direction: column; gap: 5px; flex: 1;">
+                    <div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
+                        <span class="user-badge ${item.user}">${item.user}</span>
+                        <span class="date-text">${item.date.substring(5)}</span>
+                        <span class="card-badge">${item.card || '현금/계좌'}</span>
+                        <span class="card-badge" style="background-color: #e2e8f0;">${item.category || '기타'}</span>
+                    </div>
+                    <div class="item-title" style="padding-left: 2px;">${item.title}</div>
                 </div>
-                <div class="item-amount ${item.type === 'income' ? 'income' : 'expense'}">${item.type === 'income' ? '+' : '-'}${item.amount.toLocaleString()}원</div>
+                <div class="item-amount ${item.type === 'income' ? 'income' : 'expense'}" style="margin-left:10px; flex-shrink:0;">
+                    ${item.type === 'income' ? '+' : '-'}${item.amount.toLocaleString()}원
+                </div>
             </div>
         `).join('') || '<div style="text-align:center; padding:20px; color:#94a3b8; font-size:13px;">해당 카테고리의 거래 내역이 존재하지 않습니다.</div>';
         
         document.getElementById('list-category-filter').value = "";
     }
-    /* ================================================= */
 
     function closeCategoryDetailModal() {
         document.getElementById('category-detail-modal').style.display = 'none';
@@ -550,7 +590,8 @@
         const amount = document.getElementById('amount').value;
         const category = document.getElementById('category').value; 
         
-        if (!date || !title || !amount) { alert('날짜, 금액, 내역을 모두 입력해주세요!'); return; }
+        // 요구사항 1번: 카테고리가 비어있는지 명시적 판단
+        if (!date || !title || !amount || !category) { alert('날짜, 금액, 카테고리, 내역을 모두 선택 및 입력해주세요!'); return; }
         const uniqueId = Date.now();
         
         showLoading("가계부 항목을 원격 시트에 등록하는 중입니다...");
@@ -563,6 +604,7 @@
             renderApp();
             document.getElementById('title').value = '';
             document.getElementById('amount').value = '';
+            document.getElementById('category').value = ''; // 등록완료 후 카테고리 재초기화
         }).finally(() => hideLoading());
     }
     
@@ -588,8 +630,9 @@
         const uAmount = document.getElementById('modal-amount').value; 
         const uCategory = document.getElementById('modal-category').value; 
         
-        showLoading("가계부 내용을 원격 시트에서 수정하고 있습니다...");
+        if (!uCategory) { alert('카테고리를 선택해 주세요.'); return; }
 
+        showLoading("가계부 내용을 원격 시트에서 수정하고 있습니다...");
         const sendData = { action: 'update', id: currentEditingId, date: uDate, type: modalSelectedType === 'income' ? '수입' : '지출', user: modalSelectedUser, title: uTitle, amount: parseInt(uAmount), card: uCard, category: uCategory }; 
         
         fetch(googleWebAppsUrl, { method: 'POST', body: JSON.stringify(sendData) }).then(() => { 
@@ -621,37 +664,56 @@
         listElement.innerHTML = '';
         let totalIncome = 0; let totalExpense = 0;
         let cardTotals = {};
+        let categoryTotals = {}; // 요구사항 5번 렌더링용 카테고리별 지출 누적 객체
         
+        const monthNum = parseInt(selectedMonth.substring(5, 7));
+        
+        /* ================= 요구사항 4번 구현 (리스트 안내 타이틀 갱신) ================= */
+        document.getElementById('dynamic-list-title').innerText = `${monthNum}월 수입 지출 내역`;
+        updateToggleBtnTexts();
+
         ledgerItems.sort((a,b) => new Date(b.date) - new Date(a.date)).forEach(item => {
             if (item.date && item.date.startsWith(selectedMonth)) {
                 if (item.type === 'income') {
                     totalIncome += item.amount;
                 } else {
                     totalExpense += item.amount;
+                    
+                    // 카드별 데이터 연산
                     let cardKey = item.card || '현금/계좌';
                     cardTotals[cardKey] = (cardTotals[cardKey] || 0) + item.amount;
+
+                    // 카테고리별 데이터 연산 (요구사항 5번 데이터 축적)
+                    let catKey = item.category || '기타';
+                    categoryTotals[catKey] = (categoryTotals[catKey] || 0) + item.amount;
                 }
 
+                /* ================= 요구사항 3번 구현 (메인 리스트 상하 2열 배치 완료) ================= */
                 const li = document.createElement('li');
                 li.className = `ledger-item ${item.user}`; 
                 li.onclick = () => openModal(item.id);
                 li.innerHTML = `
-                    <div class="item-info">
-                        <span class="user-badge ${item.user}">${item.user}</span>
-                        <span class="card-badge">${item.card || '현금/계좌'}</span>
-                        <span class="card-badge" style="background-color: #e2e8f0;">${item.category || '기타'}</span>
-                        <span class="date-text">${item.date.substring(5)}</span>
-                        <span class="item-title">${item.title}</span>
+                    <div style="display: flex; flex-direction: column; gap: 5px; flex: 1;">
+                        <div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
+                            <span class="user-badge ${item.user}">${item.user}</span>
+                            <span class="date-text">${item.date.substring(5)}</span>
+                            <span class="card-badge">${item.card || '현금/계좌'}</span>
+                            <span class="card-badge" style="background-color: #e2e8f0;">${item.category || '기타'}</span>
+                        </div>
+                        <div class="item-title" style="padding-left: 2px;">${item.title}</div>
                     </div>
-                    <div class="item-amount ${item.type === 'income' ? 'income' : 'expense'}">${item.type === 'income' ? '+' : '-'}${item.amount.toLocaleString()}원</div>`;
+                    <div class="item-amount ${item.type === 'income' ? 'income' : 'expense'}" style="margin-left: 10px; flex-shrink: 0;">
+                        ${item.type === 'income' ? '+' : '-'}${item.amount.toLocaleString()}원
+                    </div>`;
                 listElement.appendChild(li);
             }
         });
 
         if(listElement.children.length === 0) {
-            listElement.innerHTML = '<div style="text-align:center; padding:30px; color:#94a3b8; font-size:14px;">해당 월의 가계부 데이터가 없습니다.</div>';
+            listElement.innerHTML = `<div style="text-align:center; padding:30px; color:#94a3b8; font-size:14px;">${monthNum}월의 가계부 데이터가 없습니다.</div>`;
         }
 
+        // 상단 카드별 요약 렌더링
         const cardGrid = document.getElementById('card-summary-grid');
         cardGrid.innerHTML = '';
         Object.keys(cardTotals).forEach(card => {
@@ -663,6 +725,20 @@
             container.className = 'card-row-container';
             container.appendChild(btn);
             cardGrid.appendChild(container);
+        });
+
+        /* ================= 요구사항 5번 구현 (상단 카테고리별 대시보드 그리드 컴포넌트 생성) ================= */
+        const categoryGrid = document.getElementById('category-summary-grid');
+        categoryGrid.innerHTML = '';
+        Object.keys(categoryTotals).sort((a,b) => categoryTotals[b] - categoryTotals[a]).forEach(cat => {
+            const btn = document.createElement('button');
+            const container = document.createElement('div');
+            btn.className = 'card-box';
+            btn.onclick = () => openCategoryDetailModal(cat); // 연동 터치 시 상세 팝업 바로 연동됨
+            btn.innerHTML = `<span class="card-name">📁 ${cat}</span><span class="card-val">${categoryTotals[cat].toLocaleString()}원</span>`;
+            container.className = 'card-row-container';
+            container.appendChild(btn);
+            categoryGrid.appendChild(container);
         });
 
         document.getElementById('db-balance').innerText = `${(totalIncome - totalExpense).toLocaleString()} 원`;
