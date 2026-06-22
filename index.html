@@ -8,6 +8,9 @@
         body { font-family: 'Malgun Gothic', sans-serif; background-color: #f5f7fa; margin: 0; padding: 0; display: flex; justify-content: center; }
         .app-container { width: 100%; max-width: 480px; background-color: #ffffff; min-height: 100vh; box-shadow: 0 0 20px rgba(0,0,0,0.05); display: flex; flex-direction: column; position: relative; }
         
+        /* 로딩 화면 */
+        #loading-overlay { display: none; position: fixed; top:0; left:0; width: 100%; height: 100%; background: rgba(255,255,255,0.9); z-index: 999; justify-content: center; align-items: center; font-weight: bold; color: #1e293b; }
+
         /* 대시보드 상단 */
         .header { background-color: #1e293b; color: white; padding: 25px 20px; border-bottom-left-radius: 24px; border-bottom-right-radius: 24px; }
         .header h1 { margin: 0 0 10px 0; font-size: 23px; font-weight: bold; text-align: center; }
@@ -90,6 +93,8 @@
     </style>
 </head>
 <body>
+
+<div id="loading-overlay">데이터를 불러오는 중입니다...</div>
 
 <div class="app-container">
     <div class="header">
@@ -223,7 +228,6 @@
     let currentCardModalName = '';
     let currentCardSort = 'date_desc'; 
 
-    // 초기 버튼 텍스트 설정
     function initHeader() {
         const tzOffset = new Date().getTimezoneOffset() * 60000;
         const currentMonthNum = (new Date(Date.now() - tzOffset)).toISOString().substring(5, 7);
@@ -254,7 +258,6 @@
     function openCardModal(cardName) {
         currentCardModalName = cardName;
         document.getElementById('card-modal').style.display = 'flex';
-        // 정렬 값 동기화
         document.getElementById('card-sort-select').value = currentCardSort;
         renderCardModal();
     }
@@ -307,12 +310,16 @@
     }
     function changeModalUser(user) { modalSelectedUser = user; document.getElementById('modal-user-husband').classList.toggle('active', user === '남편'); document.getElementById('modal-user-wife').classList.toggle('active', user === '아내'); }
     function selectModalType(type) { modalSelectedType = type; document.getElementById('modal-inc').classList.toggle('active', type === 'income'); document.getElementById('modal-exp').classList.toggle('active', type === 'expense'); const mCardSelect = document.getElementById('modal-card'); mCardSelect.disabled = (type === 'income'); if(type === 'income') mCardSelect.value = '선택안함'; }
+    
     function loadCloudData() {
+        document.getElementById('loading-overlay').style.display = 'flex';
         fetch(googleWebAppsUrl)
         .then(res => res.json())
         .then(data => { ledgerItems = data; renderApp(); })
-        .catch(err => console.error(err));
+        .catch(err => console.error(err))
+        .finally(() => { document.getElementById('loading-overlay').style.display = 'none'; });
     }
+
     function addItem() {
         const date = document.getElementById('date').value;
         const card = document.getElementById('card').value;
@@ -384,7 +391,6 @@
         document.getElementById('db-expense').innerText = `- ${totalExpense.toLocaleString()}원`;
     }
 
-    // 페이지 시작 시 실행
     initHeader();
     setTodayDate();
     loadCloudData();
