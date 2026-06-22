@@ -58,8 +58,13 @@
         .ledger-list { list-style: none; padding: 0; margin: 0; }
         .ledger-item { display: flex; justify-content: space-between; align-items: center; padding: 14px 10px; border-bottom: 1px solid #f1f5f9; cursor: pointer; border-radius: 6px; }
         .ledger-item:hover { background-color: #f8fafc; }
-        .item-info { display: flex; align-items: center; gap: 12px; }
+        .item-info { display: flex; align-items: center; gap: 8px; }
         .card-badge { font-size: 11px; background-color: #f1f5f9; color: #475569; padding: 3px 6px; border-radius: 4px; border: 1px solid #e2e8f0; }
+        /* 사용자 배지 스타일 추가 */
+        .user-badge { font-size: 11px; font-weight: bold; padding: 3px 6px; border-radius: 4px; border: 1px solid #e2e8f0; }
+        .user-badge.남편 { color: #0369a1; background-color: #e0f2fe; border-color: #bae6fd; }
+        .user-badge.아내 { color: #be185d; background-color: #fce7f3; border-color: #fbcfe8; }
+        
         .date-text { font-size: 12px; color: #94a3b8; }
         .item-title { font-size: 15px; color: #334155; font-weight: 500; }
         .item-amount { font-size: 16px; font-weight: bold; }
@@ -213,11 +218,9 @@
     let modalSelectedUser = '남편';
     let modalSelectedType = 'expense';
     
-    // 팝업 관련 변수 추가
     let currentCardModalName = '';
     let currentCardSort = 'date'; 
 
-    // [기존 함수들 그대로 유지]
     function setTodayDate() {
         const tzOffset = new Date().getTimezoneOffset() * 60000;
         const localISOTime = (new Date(Date.now() - tzOffset)).toISOString().slice(0, 10);
@@ -238,7 +241,6 @@
         }
     }
 
-    // 팝업 컨트롤 함수 추가
     function openCardModal(cardName) {
         currentCardModalName = cardName;
         document.getElementById('card-modal').style.display = 'flex';
@@ -274,7 +276,6 @@
         `).join('') || '<div style="text-align:center; padding:20px;">내역이 없습니다.</div>';
     }
 
-    // (나머지 기존 기능 함수들...)
     function changeUser(user) {
         selectedUser = user;
         document.getElementById('btn-user-husband').classList.toggle('active', user === '남편');
@@ -338,7 +339,15 @@
             const li = document.createElement('li');
             li.className = 'ledger-item';
             li.onclick = () => openModal(item.id);
-            li.innerHTML = `<div class="item-info"><span class="card-badge">${item.card || '현금/계좌'}</span><span class="date-text">${item.date.substring(5)}</span><span class="item-title">${item.title}</span></div><div class="item-amount ${item.type === 'income' ? 'income' : 'expense'}">${item.type === 'income' ? '+' : '-'}${item.amount.toLocaleString()}원</div>`;
+            // 사용자 이름 표시 추가
+            li.innerHTML = `
+                <div class="item-info">
+                    <span class="user-badge ${item.user}">${item.user}</span>
+                    <span class="card-badge">${item.card || '현금/계좌'}</span>
+                    <span class="date-text">${item.date.substring(5)}</span>
+                    <span class="item-title">${item.title}</span>
+                </div>
+                <div class="item-amount ${item.type === 'income' ? 'income' : 'expense'}">${item.type === 'income' ? '+' : '-'}${item.amount.toLocaleString()}원</div>`;
             listElement.appendChild(li);
         });
 
