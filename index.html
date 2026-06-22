@@ -8,9 +8,6 @@
         body { font-family: 'Malgun Gothic', sans-serif; background-color: #f5f7fa; margin: 0; padding: 0; display: flex; justify-content: center; }
         .app-container { width: 100%; max-width: 480px; background-color: #ffffff; min-height: 100vh; box-shadow: 0 0 20px rgba(0,0,0,0.05); display: flex; flex-direction: column; position: relative; }
         
-        /* 로딩 화면 */
-        #loading-overlay { display: none; position: fixed; top:0; left:0; width: 100%; height: 100%; background: rgba(255,255,255,0.9); z-index: 999; justify-content: center; align-items: center; font-weight: bold; color: #1e293b; }
-
         /* 대시보드 상단 */
         .header { background-color: #1e293b; color: white; padding: 25px 20px; border-bottom-left-radius: 24px; border-bottom-right-radius: 24px; }
         .header h1 { margin: 0 0 10px 0; font-size: 23px; font-weight: bold; text-align: center; }
@@ -64,7 +61,7 @@
         .ledger-item.아내 { background-color: #fff1f2; }
         .ledger-item:hover { opacity: 0.8; }
         
-        .item-info { display: flex; align-items: center; gap: 8px; }
+        .item-info { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
         .card-badge { font-size: 11px; background-color: #ffffff; color: #475569; padding: 3px 6px; border-radius: 4px; border: 1px solid #cbd5e1; }
         
         .user-badge { font-size: 10px; font-weight: bold; padding: 3px 7px; border-radius: 12px; }
@@ -93,8 +90,6 @@
     </style>
 </head>
 <body>
-
-<div id="loading-overlay">데이터를 불러오는 중입니다...</div>
 
 <div class="app-container">
     <div class="header">
@@ -145,6 +140,19 @@
                 <option value="롯데카드">롯데카드</option>
                 <option value="NH카드">NH카드</option>
                 <option value="현금/계좌">현금/계좌</option>
+            </select>
+        </div>
+        <div class="input-row">
+            <select id="category" style="width: 100%;">
+                <option value="기타">카테고리 선택 (기타)</option>
+                <option value="식비">식비</option>
+                <option value="교통비">교통비</option>
+                <option value="쇼핑/패션">쇼핑/패션</option>
+                <option value="마트/생필품">마트/생필품</option>
+                <option value="문화/여가">문화/여가</option>
+                <option value="의료/건강">의료/건강</option>
+                <option value="주거/통신">주거/통신</option>
+                <option value="카페/간식">카페/간식</option>
             </select>
         </div>
         <div class="input-row">
@@ -204,6 +212,19 @@
                 </select>
             </div>
             <div class="input-row">
+                <select id="modal-category" style="width: 100%;">
+                    <option value="기타">카테고리 선택 (기타)</option>
+                    <option value="식비">식비</option>
+                    <option value="교통비">교통비</option>
+                    <option value="쇼핑/패션">쇼핑/패션</option>
+                    <option value="마트/생필품">마트/생필품</option>
+                    <option value="문화/여가">문화/여가</option>
+                    <option value="의료/건강">의료/건강</option>
+                    <option value="주거/통신">주거/통신</option>
+                    <option value="카페/간식">카페/간식</option>
+                </select>
+            </div>
+            <div class="input-row">
                 <input type="text" id="modal-title">
             </div>
             <div class="modal-buttons">
@@ -216,7 +237,8 @@
 </div>
 
 <script>
-    const googleWebAppsUrl = "https://script.google.com/macros/s/AKfycbxhSd3uYZf0ItA9yZoj5XJyt1pJwcbxF1WNeh3QGn_GJm3u91WCAfnoDAwkziQ4P5z9/exec"; 
+    // 제공해주신 새 배포 URL로 반영 완료
+    const googleWebAppsUrl = "https://script.google.com/macros/s/AKfycbzwp6K95B7v3KHoyveqfeOiw9DcxzpVJ3DTxge8Xr_j2HVgF2uoEiBoJh2qcZJmMJj-/exec"; 
 
     let ledgerItems = [];
     let selectedUser = '남편';
@@ -228,6 +250,7 @@
     let currentCardModalName = '';
     let currentCardSort = 'date_desc'; 
 
+    // 초기 버튼 텍스트 설정
     function initHeader() {
         const tzOffset = new Date().getTimezoneOffset() * 60000;
         const currentMonthNum = (new Date(Date.now() - tzOffset)).toISOString().substring(5, 7);
@@ -258,6 +281,7 @@
     function openCardModal(cardName) {
         currentCardModalName = cardName;
         document.getElementById('card-modal').style.display = 'flex';
+        // 정렬 값 동기화
         document.getElementById('card-sort-select').value = currentCardSort;
         renderCardModal();
     }
@@ -287,6 +311,7 @@
             <li class="ledger-item ${item.user}" onclick="openModal(${item.id}); closeCardModal();">
                 <div class="item-info">
                     <span class="user-badge ${item.user}">${item.user}</span>
+                    <span class="card-badge">${item.category || '기타'}</span>
                     <span style="color:#94a3b8; font-size:11px;">${item.date.substring(5)}</span>
                     <span style="font-weight:500;">${item.title}</span>
                 </div>
@@ -312,34 +337,73 @@
     function selectModalType(type) { modalSelectedType = type; document.getElementById('modal-inc').classList.toggle('active', type === 'income'); document.getElementById('modal-exp').classList.toggle('active', type === 'expense'); const mCardSelect = document.getElementById('modal-card'); mCardSelect.disabled = (type === 'income'); if(type === 'income') mCardSelect.value = '선택안함'; }
     
     function loadCloudData() {
-        document.getElementById('loading-overlay').style.display = 'flex';
         fetch(googleWebAppsUrl)
         .then(res => res.json())
         .then(data => { ledgerItems = data; renderApp(); })
-        .catch(err => console.error(err))
-        .finally(() => { document.getElementById('loading-overlay').style.display = 'none'; });
+        .catch(err => console.error(err));
     }
-
+    
     function addItem() {
         const date = document.getElementById('date').value;
         const card = document.getElementById('card').value;
         const title = document.getElementById('title').value;
         const amount = document.getElementById('amount').value;
+        const category = document.getElementById('category').value; // 카테고리 데이터 변수 추가
+        
         if (!date || !title || !amount) { alert('날짜, 금액, 내역을 모두 입력해주세요!'); return; }
         const uniqueId = Date.now();
-        const sendData = { action: 'add', id: uniqueId, date, type: selectedType === 'income' ? '수입' : '지출', user: selectedUser, title, amount: parseInt(amount), card };
+        
+        // 전송 데이터 객체에 category 매핑 추가
+        const sendData = { action: 'add', id: uniqueId, date, type: selectedType === 'income' ? '수입' : '지출', user: selectedUser, title, amount: parseInt(amount), card, category };
         const submitBtn = document.querySelector('.submit-btn');
         submitBtn.innerText = "등록 중..."; submitBtn.disabled = true;
+        
         fetch(googleWebAppsUrl, { method: 'POST', body: JSON.stringify(sendData) })
         .then(r => r.json()).then(result => {
-            ledgerItems.push({ id: uniqueId, date, type: selectedType, user: selectedUser, title, amount: parseInt(amount), card });
+            ledgerItems.push({ id: uniqueId, date, type: selectedType, user: selectedUser, title, amount: parseInt(amount), card, category });
             renderApp();
             submitBtn.innerText = "가계부 등록하기"; submitBtn.disabled = false;
         });
     }
-    function openModal(id) { currentEditingId = id; const item = ledgerItems.find(i => i.id === id); document.getElementById('modal-date').value = item.date; document.getElementById('modal-title').value = item.title; document.getElementById('modal-amount').value = item.amount; changeModalUser(item.user); selectModalType(item.type); document.getElementById('modal-card').value = item.card || '선택안함'; document.getElementById('edit-modal').style.display = 'flex'; }
+    
+    function openModal(id) { 
+        currentEditingId = id; 
+        const item = ledgerItems.find(i => i.id === id); 
+        document.getElementById('modal-date').value = item.date; 
+        document.getElementById('modal-title').value = item.title; 
+        document.getElementById('modal-amount').value = item.amount; 
+        changeModalUser(item.user); 
+        selectModalType(item.type); 
+        document.getElementById('modal-card').value = item.card || '선택안함'; 
+        document.getElementById('modal-category').value = item.category || '기타'; // 모달창 열릴 때 카테고리 값 세팅 추가
+        document.getElementById('edit-modal').style.display = 'flex'; 
+    }
+    
     function closeModal() { document.getElementById('edit-modal').style.display = 'none'; }
-    function updateItem() { const uDate = document.getElementById('modal-date').value; const uCard = document.getElementById('modal-card').value; const uTitle = document.getElementById('modal-title').value; const uAmount = document.getElementById('modal-amount').value; const sendData = { action: 'update', id: currentEditingId, date: uDate, type: modalSelectedType === 'income' ? '수입' : '지출', user: modalSelectedUser, title: uTitle, amount: parseInt(uAmount), card: uCard }; fetch(googleWebAppsUrl, { method: 'POST', body: JSON.stringify(sendData) }).then(() => { const item = ledgerItems.find(i => i.id === currentEditingId); item.date = uDate; item.user = modalSelectedUser; item.title = uTitle; item.amount = parseInt(uAmount); item.type = modalSelectedType; item.card = uCard; closeModal(); renderApp(); }); }
+    
+    function updateItem() { 
+        const uDate = document.getElementById('modal-date').value; 
+        const uCard = document.getElementById('modal-card').value; 
+        const uTitle = document.getElementById('modal-title').value; 
+        const uAmount = document.getElementById('modal-amount').value; 
+        const uCategory = document.getElementById('modal-category').value; // 수정 창의 카테고리 변수 추가
+        
+        const sendData = { action: 'update', id: currentEditingId, date: uDate, type: modalSelectedType === 'income' ? '수입' : '지출', user: modalSelectedUser, title: uTitle, amount: parseInt(uAmount), card: uCard, category: uCategory }; 
+        
+        fetch(googleWebAppsUrl, { method: 'POST', body: JSON.stringify(sendData) }).then(() => { 
+            const item = ledgerItems.find(i => i.id === currentEditingId); 
+            item.date = uDate; 
+            item.user = modalSelectedUser; 
+            item.title = uTitle; 
+            item.amount = parseInt(uAmount); 
+            item.type = modalSelectedType; 
+            item.card = uCard; 
+            item.category = uCategory; // 로컬 배열 수정값 세팅
+            closeModal(); 
+            renderApp(); 
+        }); 
+    }
+    
     function deleteItem() { if (!confirm("삭제하시겠습니까?")) return; fetch(googleWebAppsUrl, { method: 'POST', body: JSON.stringify({ action: 'delete', id: currentEditingId }) }).then(() => { ledgerItems = ledgerItems.filter(i => i.id !== currentEditingId); closeModal(); renderApp(); }); }
 
     function renderApp() {
@@ -362,10 +426,12 @@
             const li = document.createElement('li');
             li.className = `ledger-item ${item.user}`; 
             li.onclick = () => openModal(item.id);
+            // 리스트 영역에 카테고리 배지 코드 삽입 완료
             li.innerHTML = `
                 <div class="item-info">
                     <span class="user-badge ${item.user}">${item.user}</span>
                     <span class="card-badge">${item.card || '현금/계좌'}</span>
+                    <span class="card-badge" style="background-color: #e2e8f0;">${item.category || '기타'}</span>
                     <span class="date-text">${item.date.substring(5)}</span>
                     <span class="item-title">${item.title}</span>
                 </div>
@@ -391,6 +457,7 @@
         document.getElementById('db-expense').innerText = `- ${totalExpense.toLocaleString()}원`;
     }
 
+    // 페이지 시작 시 실행
     initHeader();
     setTodayDate();
     loadCloudData();
