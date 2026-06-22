@@ -56,18 +56,17 @@
         .list-section { padding: 20px; flex: 1; }
         .list-title { font-size: 16px; font-weight: bold; color: #1e293b; margin-bottom: 15px; }
         .ledger-list { list-style: none; padding: 0; margin: 0; }
-        .ledger-item { display: flex; justify-content: space-between; align-items: center; padding: 14px 10px; border-bottom: 1px solid #f1f5f9; cursor: pointer; border-radius: 6px; }
+        
+        /* 구분선 스타일 적용 */
+        .ledger-item { display: flex; justify-content: space-between; align-items: center; padding: 14px 10px; border-bottom: 1px solid #e2e8f0; cursor: pointer; border-radius: 6px; }
         .ledger-item:hover { background-color: #f8fafc; }
         
-        /* 내역 전체 칸 색상 구분 (더 명확하게 수정) */
-        .ledger-item.남편 { background-color: #eff6ff; }
-        .ledger-item.아내 { background-color: #fff1f2; }
-
         .item-info { display: flex; align-items: center; gap: 8px; }
         .card-badge { font-size: 11px; background-color: #f1f5f9; color: #475569; padding: 3px 6px; border-radius: 4px; border: 1px solid #e2e8f0; }
-        .user-badge { font-size: 11px; font-weight: bold; padding: 3px 6px; border-radius: 4px; border: 1px solid #e2e8f0; }
-        .user-badge.남편 { color: #0369a1; background-color: #e0f2fe; border-color: #bae6fd; }
-        .user-badge.아내 { color: #be185d; background-color: #fce7f3; border-color: #fbcfe8; }
+        
+        .user-badge { font-size: 10px; font-weight: bold; padding: 2px 6px; border-radius: 12px; border: 1px solid transparent; }
+        .user-badge.남편 { color: #0369a1; background-color: #f0f9ff; border-color: #bae6fd; }
+        .user-badge.아내 { color: #be185d; background-color: #fff1f2; border-color: #fbcfe8; }
         
         .date-text { font-size: 12px; color: #94a3b8; }
         .item-title { font-size: 15px; color: #334155; font-weight: 500; }
@@ -75,18 +74,21 @@
         .item-amount.income { color: #2e7d32; }
         .item-amount.expense { color: #c62828; }
         
-        /* 모달 스타일 (위치 중앙 고정) */
-        .modal-overlay, .card-modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 1000; justify-content: center; align-items: center; padding: 20px; box-sizing: border-box; }
-        .modal-content { background: white; padding: 20px; border-radius: 16px; width: 100%; max-width: 380px; box-shadow: 0 4px 15px rgba(0,0,0,0.2); }
-        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
-        .modal-title { font-size: 16px; font-weight: bold; color: #1e293b; margin-bottom: 15px; }
+        /* 팝업 모달 스타일 */
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); justify-content: center; align-items: center; z-index: 100; }
+        .card-modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 200; justify-content: center; align-items: flex-start; padding-top: 50px; overflow-y: auto; }
+        .modal-content { background: white; padding: 20px; border-radius: 16px; width: 85%; max-width: 380px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        .modal-title { font-size: 16px; font-weight: bold; margin-bottom: 15px; color: #1e293b; }
         .modal-buttons { display: flex; gap: 10px; margin-top: 15px; }
         .modal-btn { flex: 1; padding: 12px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 14px; }
         .modal-btn.save { background-color: #1e293b; color: white; }
         .modal-btn.delete { background-color: #ef4444; color: white; }
         .modal-btn.cancel { background-color: #e2e8f0; color: #475569; }
         
-        .modal-item { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #f1f5f9; font-size: 14px; }
+        .filter-group { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 15px; }
+        .filter-btn { padding: 6px 12px; border: 1px solid #e2e8f0; border-radius: 20px; cursor: pointer; font-size: 11px; background: #fff; color: #64748b; transition: all 0.2s; }
+        .filter-btn.active { background: #1e293b; color: white; border-color: #1e293b; font-weight: bold; }
+        .modal-item { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid #f1f5f9; font-size: 13px; }
     </style>
 </head>
 <body>
@@ -156,23 +158,22 @@
 
     <div class="card-modal-overlay" id="card-modal" onclick="closeCardModal()">
         <div class="modal-content" onclick="event.stopPropagation()">
-            <div class="modal-header">
-                <div class="modal-title" id="card-modal-title">카드 상세</div>
-                <select id="sort-select" onchange="setCardSort(this.value)" style="padding: 5px; border-radius: 5px; border: 1px solid #e2e8f0; font-size: 12px;">
-                    <option value="date">최신순</option>
-                    <option value="amount">금액순</option>
-                    <option value="name">가나다순</option>
-                </select>
+            <div class="modal-title" id="card-modal-title">카드 상세</div>
+            <div class="filter-group">
+                <button class="filter-btn active" id="btn-sort-date_desc" onclick="setCardSort('date_desc')">최신순</button>
+                <button class="filter-btn" id="btn-sort-date_asc" onclick="setCardSort('date_asc')">과거순</button>
+                <button class="filter-btn" id="btn-sort-amt_desc" onclick="setCardSort('amt_desc')">높은금액</button>
+                <button class="filter-btn" id="btn-sort-amt_asc" onclick="setCardSort('amt_asc')">낮은금액</button>
+                <button class="filter-btn" id="btn-sort-name" onclick="setCardSort('name')">가나다순</button>
             </div>
             <div id="card-modal-list" style="max-height: 300px; overflow-y: auto;"></div>
             <button class="modal-btn cancel" style="margin-top:15px; width:100%;" onclick="closeCardModal()">닫기</button>
         </div>
     </div>
 
-    <div class="modal-overlay" id="edit-modal" onclick="closeModal()">
-        <div class="modal-content" onclick="event.stopPropagation()">
+    <div class="modal-overlay" id="edit-modal">
+        <div class="modal-content">
             <div class="modal-title">내역 수정 / 삭제</div>
-            
             <div class="type-selector">
                 <div class="type-btn husband" id="modal-user-husband" onclick="changeModalUser('남편')">남편</div>
                 <div class="type-btn wife" id="modal-user-wife" onclick="changeModalUser('아내')">아내</div>
@@ -181,12 +182,11 @@
                 <div class="type-btn income" id="modal-inc" onclick="selectModalType('income')">수입</div>
                 <div class="type-btn expense" id="modal-exp" onclick="selectModalType('expense')">지출</div>
             </div>
-
             <div class="input-row" style="margin-top:12px;">
                 <input type="date" id="modal-date" style="width:100%;">
             </div>
             <div class="input-row">
-                <input type="number" id="modal-amount" placeholder="금액">
+                <input type="number" id="modal-amount">
                 <select id="modal-card">
                     <option value="선택안함">카드 선택</option>
                     <option value="현대카드">현대카드</option>
@@ -200,7 +200,7 @@
                 </select>
             </div>
             <div class="input-row">
-                <input type="text" id="modal-title" style="width:100%;" placeholder="내역">
+                <input type="text" id="modal-title">
             </div>
             <div class="modal-buttons">
                 <button class="modal-btn delete" onclick="deleteItem()">삭제</button>
@@ -218,13 +218,11 @@
     let selectedUser = '남편';
     let selectedType = 'expense'; 
     let currentEditingId = null; 
-    
-    // 모달용 상태변수 복구
     let modalSelectedUser = '남편';
     let modalSelectedType = 'expense';
     
     let currentCardModalName = '';
-    let currentCardSort = 'date'; 
+    let currentCardSort = 'date_desc'; 
 
     function setTodayDate() {
         const tzOffset = new Date().getTimezoneOffset() * 60000;
@@ -249,8 +247,6 @@
     function openCardModal(cardName) {
         currentCardModalName = cardName;
         document.getElementById('card-modal').style.display = 'flex';
-        document.getElementById('sort-select').value = 'date';
-        currentCardSort = 'date';
         renderCardModal();
     }
     function closeCardModal() {
@@ -258,6 +254,8 @@
     }
     function setCardSort(type) {
         currentCardSort = type;
+        document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+        document.getElementById(`btn-sort-${type}`).classList.add('active');
         renderCardModal();
     }
 
@@ -269,16 +267,22 @@
         
         let filtered = ledgerItems.filter(i => i.card === currentCardModalName && i.date.startsWith(currentMonthStr));
         
-        if(currentCardSort === 'amount') filtered.sort((a,b) => b.amount - a.amount);
+        if(currentCardSort === 'amt_desc') filtered.sort((a,b) => b.amount - a.amount);
+        else if(currentCardSort === 'amt_asc') filtered.sort((a,b) => a.amount - b.amount);
         else if(currentCardSort === 'name') filtered.sort((a,b) => a.title.localeCompare(b.title));
+        else if(currentCardSort === 'date_asc') filtered.sort((a,b) => new Date(a.date) - new Date(b.date));
         else filtered.sort((a,b) => new Date(b.date) - new Date(a.date));
 
         modalList.innerHTML = filtered.map(item => `
             <div class="modal-item">
-                <span>${item.date.substring(5)} ${item.title} (${item.user})</span>
-                <span style="font-weight:bold">${item.amount.toLocaleString()}원</span>
+                <div class="item-info">
+                    <span class="user-badge ${item.user}">${item.user}</span>
+                    <span style="color:#94a3b8; font-size:11px;">${item.date.substring(5)}</span>
+                    <span style="font-weight:500;">${item.title}</span>
+                </div>
+                <span style="font-weight:bold;">${item.amount.toLocaleString()}원</span>
             </div>
-        `).join('') || '<div style="text-align:center; padding:20px;">내역이 없습니다.</div>';
+        `).join('') || '<div style="text-align:center; padding:20px; color:#94a3b8;">내역이 없습니다.</div>';
     }
 
     function changeUser(user) {
@@ -294,22 +298,8 @@
         cardSelect.disabled = (type === 'income');
         if(type === 'income') cardSelect.value = '선택안함';
     }
-
-    // 모달용 변경 함수들 복구
-    function changeModalUser(user) { 
-        modalSelectedUser = user; 
-        document.getElementById('modal-user-husband').classList.toggle('active', user === '남편'); 
-        document.getElementById('modal-user-wife').classList.toggle('active', user === '아내'); 
-    }
-    function selectModalType(type) { 
-        modalSelectedType = type; 
-        document.getElementById('modal-inc').classList.toggle('active', type === 'income'); 
-        document.getElementById('modal-exp').classList.toggle('active', type === 'expense'); 
-        const mCardSelect = document.getElementById('modal-card'); 
-        mCardSelect.disabled = (type === 'income'); 
-        if(type === 'income') mCardSelect.value = '선택안함'; 
-    }
-
+    function changeModalUser(user) { modalSelectedUser = user; document.getElementById('modal-user-husband').classList.toggle('active', user === '남편'); document.getElementById('modal-user-wife').classList.toggle('active', user === '아내'); }
+    function selectModalType(type) { modalSelectedType = type; document.getElementById('modal-inc').classList.toggle('active', type === 'income'); document.getElementById('modal-exp').classList.toggle('active', type === 'expense'); const mCardSelect = document.getElementById('modal-card'); mCardSelect.disabled = (type === 'income'); if(type === 'income') mCardSelect.value = '선택안함'; }
     function loadCloudData() {
         fetch(googleWebAppsUrl)
         .then(res => res.json())
@@ -333,33 +323,9 @@
             submitBtn.innerText = "가계부 등록하기"; submitBtn.disabled = false;
         });
     }
-    function openModal(id) { 
-        currentEditingId = id; 
-        const item = ledgerItems.find(i => i.id === id); 
-        document.getElementById('modal-date').value = item.date; 
-        document.getElementById('modal-title').value = item.title; 
-        document.getElementById('modal-amount').value = item.amount; 
-        
-        changeModalUser(item.user); 
-        selectModalType(item.type);
-        
-        document.getElementById('modal-card').value = item.card || '선택안함'; 
-        document.getElementById('edit-modal').style.display = 'flex'; 
-    }
+    function openModal(id) { currentEditingId = id; const item = ledgerItems.find(i => i.id === id); document.getElementById('modal-date').value = item.date; document.getElementById('modal-title').value = item.title; document.getElementById('modal-amount').value = item.amount; changeModalUser(item.user); selectModalType(item.type); document.getElementById('modal-card').value = item.card || '선택안함'; document.getElementById('edit-modal').style.display = 'flex'; }
     function closeModal() { document.getElementById('edit-modal').style.display = 'none'; }
-    function updateItem() { 
-        const uDate = document.getElementById('modal-date').value; 
-        const uCard = document.getElementById('modal-card').value; 
-        const uTitle = document.getElementById('modal-title').value; 
-        const uAmount = document.getElementById('modal-amount').value; 
-        
-        const sendData = { action: 'update', id: currentEditingId, date: uDate, type: modalSelectedType === 'income' ? '수입' : '지출', user: modalSelectedUser, title: uTitle, amount: parseInt(uAmount), card: uCard }; 
-        fetch(googleWebAppsUrl, { method: 'POST', body: JSON.stringify(sendData) }).then(() => { 
-            const item = ledgerItems.find(i => i.id === currentEditingId); 
-            item.date = uDate; item.user = modalSelectedUser; item.title = uTitle; item.amount = parseInt(uAmount); item.type = modalSelectedType; item.card = uCard; 
-            closeModal(); renderApp(); 
-        }); 
-    }
+    function updateItem() { const uDate = document.getElementById('modal-date').value; const uCard = document.getElementById('modal-card').value; const uTitle = document.getElementById('modal-title').value; const uAmount = document.getElementById('modal-amount').value; const sendData = { action: 'update', id: currentEditingId, date: uDate, type: modalSelectedType === 'income' ? '수입' : '지출', user: modalSelectedUser, title: uTitle, amount: parseInt(uAmount), card: uCard }; fetch(googleWebAppsUrl, { method: 'POST', body: JSON.stringify(sendData) }).then(() => { const item = ledgerItems.find(i => i.id === currentEditingId); item.date = uDate; item.user = modalSelectedUser; item.title = uTitle; item.amount = parseInt(uAmount); item.type = modalSelectedType; item.card = uCard; closeModal(); renderApp(); }); }
     function deleteItem() { if (!confirm("삭제하시겠습니까?")) return; fetch(googleWebAppsUrl, { method: 'POST', body: JSON.stringify({ action: 'delete', id: currentEditingId }) }).then(() => { ledgerItems = ledgerItems.filter(i => i.id !== currentEditingId); closeModal(); renderApp(); }); }
 
     function renderApp() {
@@ -380,7 +346,7 @@
                 }
             }
             const li = document.createElement('li');
-            li.className = `ledger-item ${item.user}`;
+            li.className = 'ledger-item';
             li.onclick = () => openModal(item.id);
             li.innerHTML = `
                 <div class="item-info">
