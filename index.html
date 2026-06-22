@@ -43,7 +43,7 @@
         .card-name { color: #cbd5e1; font-weight: 500; }
         .card-val { font-weight: bold; color: #ffffff; }
 
-        .input-row { display: flex; gap: 10px; margin-bottom: 12px; }
+        .input-row { display: flex; gap: 10px; margin-bottom: 12px; align-items: center; }
         input, select { padding: 12px; border: 1px solid #e2e8f0; border-radius: 8px; font-size: 15px; outline: none; background-color: #f8fafc; box-sizing: border-box; }
         input:focus, select:focus { border-color: #1e293b; background-color: #fff; }
         .input-row select { width: 35%; flex-shrink: 0; } 
@@ -55,7 +55,6 @@
         .list-title { font-size: 16px; font-weight: bold; color: #1e293b; margin-bottom: 15px; }
         .ledger-list { list-style: none; padding: 0; margin: 0; }
         
-        /* 공통 내역 아이템 스타일 (상하 분할 대응 구조) */
         .ledger-item { display: flex; justify-content: space-between; align-items: center; padding: 14px 10px; border-bottom: 1px solid #e2e8f0; cursor: pointer; }
         .ledger-item.남편 { background-color: #f0f9ff; }
         .ledger-item.아내 { background-color: #fff1f2; }
@@ -144,9 +143,11 @@
             <div class="type-btn income" id="btn-inc" onclick="selectType('income')">수입</div>
             <div class="type-btn expense active" id="btn-exp" onclick="selectType('expense')">지출</div>
         </div>
+        
         <div class="input-row">
-            <input type="date" id="date" style="width: 100%;">
+            <input type="date" id="date" style="width: 100%; text-align: center;">
         </div>
+        
         <div class="input-row">
             <input type="number" id="amount" placeholder="금액 입력 (원)">
             <select id="card">
@@ -161,10 +162,12 @@
                 <option value="현금/계좌">현금/계좌</option>
             </select>
         </div>
+        
         <div class="input-row">
             <select id="category" style="flex: 1; min-width: 0;"></select>
-            <button type="button" onclick="openCategoryModal()" style="width: 35%; flex-shrink: 0; padding: 12px; border: 1px solid #e2e8f0; border-radius: 8px; font-size: 14px; background-color: #f8fafc; color: #64748b; font-weight: bold; cursor: pointer;">카테고리 추가/삭제</button>
+            <button type="button" onclick="openCategoryModal()" style="padding: 12px 10px; border: 1px solid #e2e8f0; border-radius: 8px; font-size: 13px; background-color: #f8fafc; color: #64748b; font-weight: bold; cursor: pointer; white-space: nowrap; flex-shrink: 0;">카테고리 추가/삭제</button>
         </div>
+        
         <div class="input-row">
             <input type="text" id="title" placeholder="사용 내역을 입력하세요">
         </div>
@@ -185,8 +188,7 @@
         <div class="modal-content" onclick="event.stopPropagation()">
             <div class="modal-title" id="category-detail-title" style="font-size: 16px; font-weight: bold; color: #1e293b; margin-bottom: 12px;">카테고리 상세</div>
             
-            <div id="category-detail-summary" style="margin: 10px 0 15px 0; padding: 14px; background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; font-size: 14px;">
-                </div>
+            <div id="category-detail-summary" style="margin: 10px 0 15px 0; padding: 14px; background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; font-size: 14px;"></div>
             
             <div id="category-detail-list" style="max-height: 250px; overflow-y: auto; border-top: 1px dashed #cbd5e1; padding-top: 5px;"></div>
             <button class="modal-btn cancel" style="margin-top:15px; width:100%;" onclick="closeCategoryDetailModal()">닫기</button>
@@ -222,7 +224,7 @@
                 <div class="type-btn expense" id="modal-exp" onclick="selectModalType('expense')">지출</div>
             </div>
             <div class="input-row" style="margin-top:12px;">
-                <input type="date" id="modal-date" style="width:100%;">
+                <input type="date" id="modal-date" style="width:100%; text-align: center;">
             </div>
             <div class="input-row">
                 <input type="number" id="modal-amount">
@@ -296,7 +298,6 @@
         renderCategoryDropdowns();
     }
 
-    /* ================= 요구사항 1번 구현 ================= */
     function renderCategoryDropdowns() {
         const catSelect = document.getElementById('category');
         const modalCatSelect = document.getElementById('modal-category');
@@ -307,10 +308,8 @@
 
         const optionsHtml = categories.map(cat => `<option value="${cat}">${cat}</option>`).join('');
         
-        // 임의 선택되지 않도록 비활성화된 Placeholder 제공
         catSelect.innerHTML = '<option value="" disabled selected hidden>카테고리 선택</option>' + optionsHtml;
         modalCatSelect.innerHTML = '<option value="" disabled selected hidden>카테고리 선택</option>' + optionsHtml;
-        
         filterSelect.innerHTML = '<option value="">카테고리별 합산 보기</option>' + optionsHtml;
 
         if(currentVal && categories.includes(currentVal)) catSelect.value = currentVal;
@@ -390,11 +389,9 @@
         updateToggleBtnTexts();
     }
 
-    /* ================= 요구사항 5번 관련 토글 제어 텍스트 매핑 ================= */
     function updateToggleBtnTexts() {
         const monthNum = parseInt(selectedMonth.substring(5, 7));
         
-        // 카드별 제어 텍스트
         const cardBtn = document.getElementById('card-toggle-btn');
         const cardWrapper = document.getElementById('card-section-wrapper');
         if (cardWrapper.style.display === 'block') {
@@ -403,7 +400,6 @@
             cardBtn.innerText = `💳 ${monthNum}월 카드별 지출 보기 ▾`;
         }
 
-        // 카테고리별 제어 텍스트
         const catBtn = document.getElementById('category-toggle-btn');
         const catWrapper = document.getElementById('category-section-wrapper');
         if (catWrapper.style.display === 'block') {
@@ -426,13 +422,13 @@
         renderApp();
     }
 
+    style="text-align: center;"
     function toggleCardSection() {
         const wrapper = document.getElementById('card-section-wrapper');
         wrapper.style.display = (wrapper.style.display === 'none' || wrapper.style.display === '') ? 'block' : 'none';
         updateToggleBtnTexts();
     }
 
-    /* ================= 요구사항 5번 토글 핸들러 함수 ================= */
     function toggleCategorySection() {
         const wrapper = document.getElementById('category-section-wrapper');
         wrapper.style.display = (wrapper.style.display === 'none' || wrapper.style.display === '') ? 'block' : 'none';
@@ -465,7 +461,6 @@
         else if(currentCardSort === 'date_asc') filtered.sort((a,b) => new Date(a.date) - new Date(b.date));
         else filtered.sort((a,b) => new Date(b.date) - new Date(a.date));
 
-        /* ================= 요구사항 3번 반영 (카드상세 목록 레이아웃 변경) ================= */
         modalList.innerHTML = filtered.map(item => `
             <li class="ledger-item ${item.user}" onclick="openModal(${item.id}); closeCardModal();">
                 <div style="display: flex; flex-direction: column; gap: 5px; flex: 1;">
@@ -482,7 +477,6 @@
         `).join('') || '<div style="text-align:center; padding:20px; color:#94a3b8;">내역이 없습니다.</div>';
     }
 
-    /* ================= 요구사항 2번 및 3번 반영 (카테고리 상세 팝업창 개선) ================= */
     function openCategoryDetailModal(catName) {
         if (!catName) return;
         document.getElementById('category-detail-modal').style.display = 'flex';
@@ -493,7 +487,7 @@
         let filtered = ledgerItems.filter(i => i.category === catName && i.date && i.date.startsWith(selectedMonth));
         
         let totalExp = 0;
-        let cardTotalsMap = {}; // 특정 카테고리 내부의 카드 지출 합산 오브젝트
+        let cardTotalsMap = {}; 
 
         filtered.forEach(i => {
             if (i.type === 'expense') {
@@ -503,7 +497,6 @@
             }
         });
         
-        // 요구사항 2번: 카드목록별 합산 결과 HTML 동적 매핑
         let cardSummaryHtml = Object.keys(cardTotalsMap).map(card => `
             <div style="display: flex; justify-content: space-between; font-size: 13px; color: #475569; margin-top: 5px; padding-left: 8px;">
                 <span>• ${card}</span>
@@ -525,7 +518,6 @@
             </div>
         `;
         
-        // 요구사항 3번: 카테고리 상세 내부의 내역 리스트도 동일하게 상하 분할 적용
         const listContainer = document.getElementById('category-detail-list');
         listContainer.innerHTML = filtered.map(item => `
             <div class="ledger-item ${item.user}" style="border-radius:6px; margin-bottom:5px;" onclick="openModal(${item.id}); closeCategoryDetailModal();">
@@ -590,7 +582,6 @@
         const amount = document.getElementById('amount').value;
         const category = document.getElementById('category').value; 
         
-        // 요구사항 1번: 카테고리가 비어있는지 명시적 판단
         if (!date || !title || !amount || !category) { alert('날짜, 금액, 카테고리, 내역을 모두 선택 및 입력해주세요!'); return; }
         const uniqueId = Date.now();
         
@@ -604,7 +595,7 @@
             renderApp();
             document.getElementById('title').value = '';
             document.getElementById('amount').value = '';
-            document.getElementById('category').value = ''; // 등록완료 후 카테고리 재초기화
+            document.getElementById('category').value = ''; 
         }).finally(() => hideLoading());
     }
     
@@ -664,12 +655,11 @@
         listElement.innerHTML = '';
         let totalIncome = 0; let totalExpense = 0;
         let cardTotals = {};
-        let categoryTotals = {}; // 요구사항 5번 렌더링용 카테고리별 지출 누적 객체
+        let categoryTotals = {}; 
         
         const monthNum = parseInt(selectedMonth.substring(5, 7));
         
-        /* ================= 요구사항 4번 구현 (리스트 안내 타이틀 갱신) ================= */
-        document.getElementById('dynamic-list-title').innerText = `${monthNum}월 수입 / 지출 내역`;
+        document.getElementById('dynamic-list-title').innerText = `${monthNum}월 수입 지출 내역`;
         updateToggleBtnTexts();
 
         ledgerItems.sort((a,b) => new Date(b.date) - new Date(a.date)).forEach(item => {
@@ -679,16 +669,13 @@
                 } else {
                     totalExpense += item.amount;
                     
-                    // 카드별 데이터 연산
                     let cardKey = item.card || '현금/계좌';
                     cardTotals[cardKey] = (cardTotals[cardKey] || 0) + item.amount;
 
-                    // 카테고리별 데이터 연산 (요구사항 5번 데이터 축적)
                     let catKey = item.category || '기타';
                     categoryTotals[catKey] = (categoryTotals[catKey] || 0) + item.amount;
                 }
 
-                /* ================= 요구사항 3번 구현 (메인 리스트 상하 2열 배치 완료) ================= */
                 const li = document.createElement('li');
                 li.className = `ledger-item ${item.user}`; 
                 li.onclick = () => openModal(item.id);
@@ -713,7 +700,6 @@
             listElement.innerHTML = `<div style="text-align:center; padding:30px; color:#94a3b8; font-size:14px;">${monthNum}월의 가계부 데이터가 없습니다.</div>`;
         }
 
-        // 상단 카드별 요약 렌더링
         const cardGrid = document.getElementById('card-summary-grid');
         cardGrid.innerHTML = '';
         Object.keys(cardTotals).forEach(card => {
@@ -727,15 +713,15 @@
             cardGrid.appendChild(container);
         });
 
-        /* ================= 요구사항 5번 구현 (상단 카테고리별 대시보드 그리드 컴포넌트 생성) ================= */
+        /* ================= 요구사항 1번: 폴더 이모지(📁) 제거 완료 ================= */
         const categoryGrid = document.getElementById('category-summary-grid');
         categoryGrid.innerHTML = '';
         Object.keys(categoryTotals).sort((a,b) => categoryTotals[b] - categoryTotals[a]).forEach(cat => {
             const btn = document.createElement('button');
             const container = document.createElement('div');
             btn.className = 'card-box';
-            btn.onclick = () => openCategoryDetailModal(cat); // 연동 터치 시 상세 팝업 바로 연동됨
-            btn.innerHTML = `<span class="card-name">📁 ${cat}</span><span class="card-val">${categoryTotals[cat].toLocaleString()}원</span>`;
+            btn.onclick = () => openCategoryDetailModal(cat); 
+            btn.innerHTML = `<span class="card-name">${cat}</span><span class="card-val">${categoryTotals[cat].toLocaleString()}원</span>`;
             container.className = 'card-row-container';
             container.appendChild(btn);
             categoryGrid.appendChild(container);
