@@ -36,11 +36,26 @@
         .type-btn.active.income { background-color: #e8f5e9; color: #2e7d32; border-color: #2e7d32; }
         .type-btn.active.expense { background-color: #ffebee; color: #c62828; border-color: #c62828; }
         
-        /* 카드별 요약 격자 스타일 (상단 이동에 맞춰 마진 조정) */
-        .card-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
-        .card-box { background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 10px 12px; display: flex; justify-content: space-between; align-items: center; font-size: 13px; }
-        .card-name { color: #475569; font-weight: 500; }
-        .card-val { font-weight: bold; color: #1e293b; }
+        /* 카드별 요약 세부 구조 (수정됨) */
+        .card-grid { display: flex; flex-direction: column; gap: 8px; }
+        .card-row-container { background-color: rgba(255, 255, 255, 0.08); border-radius: 8px; overflow: hidden; border: 1px solid rgba(255,255,255,0.1); }
+        
+        /* 클릭 가능한 카드 박스 */
+        .card-box { width: 100%; border: none; background: transparent; padding: 12px; display: flex; justify-content: space-between; align-items: center; font-size: 13px; color: white; cursor: pointer; text-align: left; font-family: inherit; box-sizing: border-box; }
+        .card-box:hover { background-color: rgba(255, 255, 255, 0.05); }
+        .card-name { color: #cbd5e1; font-weight: 500; }
+        .card-val { font-weight: bold; color: #ffffff; }
+
+        /* 카드 클릭 시 나타날 세부 리스트 컨테이너 */
+        .card-detail-list { display: none; background-color: rgba(0, 0, 0, 0.2); padding: 5px 12px 10px 12px; border-top: 1px solid rgba(255,255,255,0.05); }
+        .card-detail-item { display: flex; justify-content: space-between; font-size: 11px; padding: 6px 0; border-bottom: 1px solid rgba(255,255,255,0.05); color: #94a3b8; }
+        .card-detail-item:last-child { border-bottom: none; }
+        .detail-left { display: flex; gap: 8px; align-items: center; }
+        .detail-user { font-weight: bold; font-size: 10px; padding: 1px 4px; border-radius: 3px; }
+        .detail-user.husband { background-color: rgba(14, 165, 233, 0.2); color: #38bdf8; }
+        .detail-user.wife { background-color: rgba(236, 72, 153, 0.2); color: #f472b6; }
+        .detail-title { color: #e2e8f0; }
+        .detail-amount { font-weight: bold; color: #f87171; }
 
         .input-row { display: flex; gap: 10px; margin-bottom: 12px; }
         input, select { padding: 12px; border: 1px solid #e2e8f0; border-radius: 8px; font-size: 15px; outline: none; background-color: #f8fafc; box-sizing: border-box; }
@@ -203,7 +218,6 @@
 </div>
 
 <script>
-    // 🔗 원본 앱 스크립트 URL 유지
     const googleWebAppsUrl = "https://script.google.com/macros/s/AKfycbxhSd3uYZf0ItA9yZoj5XJyt1pJwcbxF1WNeh3QGn_GJm3u91WCAfnoDAwkziQ4P5z9/exec"; 
 
     let ledgerItems = [];
@@ -219,7 +233,6 @@
         document.getElementById('date').value = localISOTime;
     }
 
-    // 💳 [새로운 함수] 카드 섹션을 열고 닫는 토글 함수
     function toggleCardSection() {
         const wrapper = document.getElementById('card-section-wrapper');
         const btn = document.getElementById('card-toggle-btn');
@@ -233,6 +246,21 @@
         } else {
             wrapper.style.display = 'none';
             btn.innerText = `💳 ${currentMonthNum}월 카드별 지출 보기 ▾`;
+        }
+    }
+
+    // 💳 [새로운 함수] 특정 카드 이름을 누르면 하위 디테일창을 열고 닫는 토글러
+    function toggleCardDetail(cardIdStr) {
+        const detailBox = document.getElementById(`detail-${cardIdStr}`);
+        const indicator = document.getElementById(`ind-${cardIdStr}`);
+        if(!detailBox) return;
+
+        if (detailBox.style.display === 'none' || detailBox.style.display === '') {
+            detailBox.style.display = 'block';
+            if(indicator) indicator.innerText = '▴';
+        } else {
+            detailBox.style.display = 'none';
+            if(indicator) indicator.innerText = '▾';
         }
     }
 
@@ -459,7 +487,10 @@
 
         let totalIncome = 0;
         let totalExpense = 0;
+        
+        // 💳 카드별 합산 및 카드별 '상세 내역 아이템 배여' 구조화
         let cardTotals = {};
+        let cardDetailsMap = {};
         
         const tzOffset = new Date().getTimezoneOffset() * 60000;
         const currentMonthStr = (new Date(Date.now() - tzOffset)).toISOString().substring(0, 7);
@@ -467,7 +498,6 @@
         const currentMonthNum = currentMonthStr.split('-')[1];
         document.getElementById('balance-label').innerText = `${currentMonthNum}월 정산 잔액`;
 
-        // 💳 현재 가계부 상태(열림/닫힘)를 유지하면서 버튼 내부 월 표시 자동 연동
         const wrapper = document.getElementById('card-section-wrapper');
         const cardToggleBtn = document.getElementById('card-toggle-btn');
         const isExpanded = (wrapper.style.display === 'block');
@@ -487,6 +517,10 @@
                         cardKey = '현금/계좌';
                     }
                     cardTotals[cardKey] = (cardTotals[cardKey] || 0) + item.amount;
+                    
+                    // 해당 카드 리스트 배열에 소비 항목 push
+                    if(!cardDetailsMap[cardKey]) cardDetailsMap[cardKey] = [];
+                    cardDetailsMap[cardKey].push(item);
                 }
             }
 
@@ -517,23 +551,60 @@
             listElement.appendChild(li);
         });
 
-        // 💳 카드별 요약 격자 데이터 업데이트 (어두운 배경 가독성을 위해 노데이터 텍스트 색 변경)
+        // 💳 카드별 요약 및 세부 내역 매핑 렌더링
         const cardGrid = document.getElementById('card-summary-grid');
         cardGrid.innerHTML = '';
         
         const activeCards = Object.keys(cardTotals).filter(key => cardTotals[key] > 0);
         
         if (activeCards.length === 0) {
-            cardGrid.innerHTML = '<div style="grid-column: span 2; text-align: center; color: #cbd5e1; font-size: 13px; padding: 10px 0;">이번 달 카드 지출 내역이 없습니다.</div>';
+            cardGrid.innerHTML = '<div style="text-align: center; color: #cbd5e1; font-size: 13px; padding: 10px 0;">이번 달 카드 지출 내역이 없습니다.</div>';
         } else {
-            activeCards.forEach(card => {
-                const box = document.createElement('div');
-                box.className = 'card-box';
-                box.innerHTML = `
-                    <span class="card-name">${card}</span>
+            activeCards.forEach((card, idx) => {
+                const cardIdStr = `card-idx-${idx}`; // 고유 아이디 생성
+                
+                const container = document.createElement('div');
+                container.className = 'card-row-container';
+                
+                // 1단계: 누를 수 있는 카드 버튼 박스
+                const boxBtn = document.createElement('button');
+                boxBtn.className = 'box-btn card-box';
+                boxBtn.onclick = () => toggleCardDetail(cardIdStr);
+                boxBtn.innerHTML = `
+                    <span class="card-name">${card} <span id="ind-${cardIdStr}" style="font-size:10px; margin-left:3px; opacity:0.6;">▾</span></span>
                     <span class="card-val">${cardTotals[card].toLocaleString()}원</span>
                 `;
-                cardGrid.appendChild(box);
+                
+                // 2단계: 클릭 시 펼쳐질 세부 내역 목록창
+                const detailList = document.createElement('div');
+                detailList.className = 'card-detail-list';
+                detailList.id = `detail-${cardIdStr}`;
+                
+                // 해당 카드의 세부 항목들 HTML 생성
+                let detailsHtml = '';
+                if(cardDetailsMap[card]) {
+                    // 날짜 순 정렬 (오래된 순 혹은 최신 순 취향 따라 가능, 여기선 날짜순 정렬)
+                    const sortedDetails = [...cardDetailsMap[card]].sort((a,b) => new Date(a.date) - new Date(b.date));
+                    sortedDetails.forEach(det => {
+                        const userClass = det.user === '남편' ? 'husband' : 'wife';
+                        const mDate = det.date ? det.date.substring(8, 10) : ''; // 일자만 표시 (예: 22일)
+                        detailsHtml += `
+                            <div class="card-detail-item">
+                                <div class="detail-left">
+                                    <span class="detail-user ${userClass}">${det.user}</span>
+                                    <span style="color:#64748b;">${mDate}일</span>
+                                    <span class="detail-title">${det.title}</span>
+                                </div>
+                                <div class="detail-amount">${det.amount.toLocaleString()}원</div>
+                            </div>
+                        `;
+                    });
+                }
+                detailList.innerHTML = detailsHtml;
+                
+                container.appendChild(boxBtn);
+                container.appendChild(detailList);
+                cardGrid.appendChild(container);
             });
         }
 
