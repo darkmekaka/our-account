@@ -143,17 +143,8 @@
             </select>
         </div>
         <div class="input-row">
-            <select id="category" style="width: 100%;">
-                <option value="기타">카테고리 선택 (기타)</option>
-                <option value="식비">식비</option>
-                <option value="교통비">교통비</option>
-                <option value="쇼핑/패션">쇼핑/패션</option>
-                <option value="마트/생필품">마트/생필품</option>
-                <option value="문화/여가">문화/여가</option>
-                <option value="의료/건강">의료/건강</option>
-                <option value="주거/통신">주거/통신</option>
-                <option value="카페/간식">카페/간식</option>
-            </select>
+            <select id="category" style="flex: 1; min-width: 0;"></select>
+            <button type="button" onclick="openCategoryModal()" style="width: 35%; flex-shrink: 0; padding: 12px; border: 1px solid #e2e8f0; border-radius: 8px; font-size: 14px; background-color: #f8fafc; color: #64748b; font-weight: bold; cursor: pointer;">추가/삭제</button>
         </div>
         <div class="input-row">
             <input type="text" id="title" placeholder="사용 내역을 입력하세요">
@@ -212,17 +203,7 @@
                 </select>
             </div>
             <div class="input-row">
-                <select id="modal-category" style="width: 100%;">
-                    <option value="기타">카테고리 선택 (기타)</option>
-                    <option value="식비">식비</option>
-                    <option value="교통비">교통비</option>
-                    <option value="쇼핑/패션">쇼핑/패션</option>
-                    <option value="마트/생필품">마트/생필품</option>
-                    <option value="문화/여가">문화/여가</option>
-                    <option value="의료/건강">의료/건강</option>
-                    <option value="주거/통신">주거/통신</option>
-                    <option value="카페/간식">카페/간식</option>
-                </select>
+                <select id="modal-category" style="width: 100%;"></select>
             </div>
             <div class="input-row">
                 <input type="text" id="modal-title">
@@ -234,10 +215,23 @@
             </div>
         </div>
     </div>
+
+    <div class="modal-overlay" id="category-modal">
+        <div class="modal-content">
+            <div class="modal-title">카테고리 편집</div>
+            <div class="input-row" style="margin-top:15px; display: flex; gap: 8px;">
+                <input type="text" id="new-category-name" placeholder="새 카테고리 입력" style="flex: 1; min-width: 0;">
+                <button class="modal-btn save" onclick="addCategory()" style="flex: none; width: 70px; margin-top: 0; padding: 12px 0;">추가</button>
+            </div>
+            <div id="category-manage-list" style="max-height: 200px; overflow-y: auto; margin-top: 12px; border: 1px solid #e2e8f0; border-radius: 8px; padding: 5px; background: #f8fafc;"></div>
+            <div class="modal-buttons" style="margin-top: 15px;">
+                <button class="modal-btn cancel" onclick="closeCategoryModal()" style="width: 100%;">닫기</button>
+            </div>
+        </div>
+    </div>
 </div>
 
 <script>
-    // 제공해주신 새 배포 URL로 반영 완료
     const googleWebAppsUrl = "https://script.google.com/macros/s/AKfycbzwp6K95B7v3KHoyveqfeOiw9DcxzpVJ3DTxge8Xr_j2HVgF2uoEiBoJh2qcZJmMJj-/exec"; 
 
     let ledgerItems = [];
@@ -249,6 +243,73 @@
     
     let currentCardModalName = '';
     let currentCardSort = 'date_desc'; 
+
+    // 카테고리 기본 배열 및 로컬 스토리지 연동 변수 추가
+    const defaultCategories = ['식비', '교통비', '쇼핑/패션', '마트/생필품', '문화/여가', '의료/건강', '주거/통신', '카페/간식', '기타'];
+    let categories = JSON.parse(localStorage.getItem('sukjam_categories')) || defaultCategories;
+
+    // 카테고리 드롭다운 생성 함수 추가
+    function initCategories() {
+        renderCategoryDropdowns();
+    }
+
+    function renderCategoryDropdowns() {
+        const catSelect = document.getElementById('category');
+        const modalCatSelect = document.getElementById('modal-category');
+        
+        const currentVal = catSelect.value || '기타';
+        const currentModalVal = modalCatSelect.value || '기타';
+
+        const optionsHtml = categories.map(cat => `<option value="${cat}">${cat}</option>`).join('');
+        
+        catSelect.innerHTML = optionsHtml;
+        modalCatSelect.innerHTML = optionsHtml;
+
+        catSelect.value = categories.includes(currentVal) ? currentVal : '기타';
+        modalCatSelect.value = categories.includes(currentModalVal) ? currentModalVal : '기타';
+    }
+
+    // 카테고리 모달 제어 함수 추가
+    function openCategoryModal() {
+        document.getElementById('category-modal').style.display = 'flex';
+        renderCategoryManageList();
+    }
+
+    function closeCategoryModal() {
+        document.getElementById('category-modal').style.display = 'none';
+    }
+
+    function renderCategoryManageList() {
+        const listDiv = document.getElementById('category-manage-list');
+        listDiv.innerHTML = categories.map(cat => `
+            <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 8px; border-bottom: 1px solid #e2e8f0;">
+                <span style="font-size: 14px; color: #334155; font-weight: 500;">${cat}</span>
+                ${cat !== '기타' ? `<button onclick="deleteCategory('${cat}')" style="background: #fee2e2; color: #ef4444; border: none; padding: 4px 8px; border-radius: 4px; font-size: 12px; cursor: pointer; font-weight: bold;">삭제</button>` : ''}
+            </div>
+        `).join('') || '<div style="text-align:center; padding:10px; color:#94a3b8; font-size:13px;">카테고리가 없습니다.</div>';
+    }
+
+    function addCategory() {
+        const input = document.getElementById('new-category-name');
+        const name = input.value.trim();
+        if (!name) { alert('카테고리 이름을 입력해주세요.'); return; }
+        if (categories.includes(name)) { alert('이미 존재하는 카테고리입니다.'); return; }
+        
+        categories.push(name);
+        localStorage.setItem('sukjam_categories', JSON.stringify(categories));
+        input.value = '';
+        renderCategoryManageList();
+        renderCategoryDropdowns();
+    }
+
+    function deleteCategory(name) {
+        if (name === '기타') return;
+        if (!confirm(`'${name}' 카테고리를 삭제하시겠습니까?`)) return;
+        categories = categories.filter(cat => cat !== name);
+        localStorage.setItem('sukjam_categories', JSON.stringify(categories));
+        renderCategoryManageList();
+        renderCategoryDropdowns();
+    }
 
     // 초기 버튼 텍스트 설정
     function initHeader() {
@@ -281,7 +342,6 @@
     function openCardModal(cardName) {
         currentCardModalName = cardName;
         document.getElementById('card-modal').style.display = 'flex';
-        // 정렬 값 동기화
         document.getElementById('card-sort-select').value = currentCardSort;
         renderCardModal();
     }
@@ -348,12 +408,11 @@
         const card = document.getElementById('card').value;
         const title = document.getElementById('title').value;
         const amount = document.getElementById('amount').value;
-        const category = document.getElementById('category').value; // 카테고리 데이터 변수 추가
+        const category = document.getElementById('category').value; 
         
         if (!date || !title || !amount) { alert('날짜, 금액, 내역을 모두 입력해주세요!'); return; }
         const uniqueId = Date.now();
         
-        // 전송 데이터 객체에 category 매핑 추가
         const sendData = { action: 'add', id: uniqueId, date, type: selectedType === 'income' ? '수입' : '지출', user: selectedUser, title, amount: parseInt(amount), card, category };
         const submitBtn = document.querySelector('.submit-btn');
         submitBtn.innerText = "등록 중..."; submitBtn.disabled = true;
@@ -375,7 +434,7 @@
         changeModalUser(item.user); 
         selectModalType(item.type); 
         document.getElementById('modal-card').value = item.card || '선택안함'; 
-        document.getElementById('modal-category').value = item.category || '기타'; // 모달창 열릴 때 카테고리 값 세팅 추가
+        document.getElementById('modal-category').value = item.category || '기타'; 
         document.getElementById('edit-modal').style.display = 'flex'; 
     }
     
@@ -386,7 +445,7 @@
         const uCard = document.getElementById('modal-card').value; 
         const uTitle = document.getElementById('modal-title').value; 
         const uAmount = document.getElementById('modal-amount').value; 
-        const uCategory = document.getElementById('modal-category').value; // 수정 창의 카테고리 변수 추가
+        const uCategory = document.getElementById('modal-category').value; 
         
         const sendData = { action: 'update', id: currentEditingId, date: uDate, type: modalSelectedType === 'income' ? '수입' : '지출', user: modalSelectedUser, title: uTitle, amount: parseInt(uAmount), card: uCard, category: uCategory }; 
         
@@ -398,7 +457,7 @@
             item.amount = parseInt(uAmount); 
             item.type = modalSelectedType; 
             item.card = uCard; 
-            item.category = uCategory; // 로컬 배열 수정값 세팅
+            item.category = uCategory; 
             closeModal(); 
             renderApp(); 
         }); 
@@ -426,7 +485,6 @@
             const li = document.createElement('li');
             li.className = `ledger-item ${item.user}`; 
             li.onclick = () => openModal(item.id);
-            // 리스트 영역에 카테고리 배지 코드 삽입 완료
             li.innerHTML = `
                 <div class="item-info">
                     <span class="user-badge ${item.user}">${item.user}</span>
@@ -457,9 +515,10 @@
         document.getElementById('db-expense').innerText = `- ${totalExpense.toLocaleString()}원`;
     }
 
-    // 페이지 시작 시 실행
+    // 페이지 시작 시 실행 영역에 카테고리 초기화 함수 추가
     initHeader();
     setTodayDate();
+    initCategories();
     loadCloudData();
 </script>
 
