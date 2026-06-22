@@ -36,26 +36,12 @@
         .type-btn.active.income { background-color: #e8f5e9; color: #2e7d32; border-color: #2e7d32; }
         .type-btn.active.expense { background-color: #ffebee; color: #c62828; border-color: #c62828; }
         
-        /* 카드별 요약 세부 구조 (수정됨) */
-        .card-grid { display: flex; flex-direction: column; gap: 8px; }
-        .card-row-container { background-color: rgba(255, 255, 255, 0.08); border-radius: 8px; overflow: hidden; border: 1px solid rgba(255,255,255,0.1); }
-        
-        /* 클릭 가능한 카드 박스 */
-        .card-box { width: 100%; border: none; background: transparent; padding: 12px; display: flex; justify-content: space-between; align-items: center; font-size: 13px; color: white; cursor: pointer; text-align: left; font-family: inherit; box-sizing: border-box; }
-        .card-box:hover { background-color: rgba(255, 255, 255, 0.05); }
+        /* 카드별 요약 격자 스타일 복원 */
+        .card-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+        .card-box { width: 100%; border: 1px solid rgba(255,255,255,0.15); background-color: rgba(255,255,255,0.08); border-radius: 8px; padding: 12px; display: flex; justify-content: space-between; align-items: center; font-size: 13px; color: white; cursor: pointer; text-align: left; font-family: inherit; box-sizing: border-box; }
+        .card-box:hover { background-color: rgba(255,255,255,0.15); border-color: rgba(255,255,255,0.3); }
         .card-name { color: #cbd5e1; font-weight: 500; }
         .card-val { font-weight: bold; color: #ffffff; }
-
-        /* 카드 클릭 시 나타날 세부 리스트 컨테이너 */
-        .card-detail-list { display: none; background-color: rgba(0, 0, 0, 0.2); padding: 5px 12px 10px 12px; border-top: 1px solid rgba(255,255,255,0.05); }
-        .card-detail-item { display: flex; justify-content: space-between; font-size: 11px; padding: 6px 0; border-bottom: 1px solid rgba(255,255,255,0.05); color: #94a3b8; }
-        .card-detail-item:last-child { border-bottom: none; }
-        .detail-left { display: flex; gap: 8px; align-items: center; }
-        .detail-user { font-weight: bold; font-size: 10px; padding: 1px 4px; border-radius: 3px; }
-        .detail-user.husband { background-color: rgba(14, 165, 233, 0.2); color: #38bdf8; }
-        .detail-user.wife { background-color: rgba(236, 72, 153, 0.2); color: #f472b6; }
-        .detail-title { color: #e2e8f0; }
-        .detail-amount { font-weight: bold; color: #f87171; }
 
         .input-row { display: flex; gap: 10px; margin-bottom: 12px; }
         input, select { padding: 12px; border: 1px solid #e2e8f0; border-radius: 8px; font-size: 15px; outline: none; background-color: #f8fafc; box-sizing: border-box; }
@@ -86,9 +72,33 @@
         .item-amount.income { color: #2e7d32; }
         .item-amount.expense { color: #c62828; }
         
-        /* 모달 팝업 */
+        /* 모달 공통 스타일 */
         .modal-overlay { display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); justify-content: center; align-items: center; z-index: 100; }
         .modal-content { background: white; padding: 20px; border-radius: 16px; width: 85%; max-width: 380px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        
+        /* 카드 상세 내역 전용 독립 팝업 (새 창 느낌의 넓은 스크린) */
+        .card-detail-popup { background: #1e293b; color: white; width: 90%; max-width: 400px; max-height: 80vh; display: flex; flex-direction: column; border-radius: 20px; padding: 22px; box-shadow: 0 10px 30px rgba(0,0,0,0.3); box-sizing: border-box; }
+        .popup-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+        .popup-title { font-size: 18px; font-weight: bold; color: #ffffff; margin: 0; }
+        .popup-close { background: none; border: none; color: #94a3b8; font-size: 22px; cursor: pointer; padding: 0; }
+        .popup-close:hover { color: white; }
+        
+        /* 필터링 셀렉트 박스 */
+        .filter-row { margin-bottom: 12px; display: flex; justify-content: flex-end; }
+        .filter-select { background: #334155; color: white; border: 1px solid #475569; padding: 6px 10px; font-size: 12px; border-radius: 6px; outline: none; cursor: pointer; }
+        
+        /* 새 창 내부의 스크롤 리스트 */
+        .popup-scroll-area { flex: 1; overflow-y: auto; background: rgba(0,0,0,0.2); border-radius: 10px; padding: 10px; margin-bottom: 10px; min-height: 150px; }
+        .pop-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 6px; border-bottom: 1px solid rgba(255,255,255,0.05); }
+        .pop-item:last-child { border-bottom: none; }
+        .pop-left { display: flex; align-items: center; gap: 8px; font-size: 13px; }
+        .pop-user { font-size: 10px; font-weight: bold; padding: 2px 5px; border-radius: 4px; }
+        .pop-user.husband { background: rgba(14, 165, 233, 0.2); color: #38bdf8; }
+        .pop-user.wife { background: rgba(236, 72, 153, 0.2); color: #f472b6; }
+        .pop-date { color: #64748b; font-size: 11px; }
+        .pop-title { color: #e2e8f0; font-weight: 500; }
+        .pop-amount { font-size: 14px; font-weight: bold; color: #f87171; }
+
         .modal-title { font-size: 16px; font-weight: bold; margin-bottom: 15px; color: #1e293b; }
         .modal-buttons { display: flex; gap: 10px; margin-top: 15px; }
         .modal-btn { flex: 1; padding: 12px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 14px; }
@@ -174,21 +184,17 @@
     <div class="modal-overlay" id="edit-modal">
         <div class="modal-content">
             <div class="modal-title">내역 수정 / 삭제</div>
-            
             <div class="type-selector">
                 <div class="type-btn husband" id="modal-user-husband" onclick="changeModalUser('남편')">남편</div>
                 <div class="type-btn wife" id="modal-user-wife" onclick="changeModalUser('아내')">아내</div>
             </div>
-
             <div class="type-selector">
                 <div class="type-btn income" id="modal-inc" onclick="selectModalType('income')">수입</div>
                 <div class="type-btn expense" id="modal-exp" onclick="selectModalType('expense')">지출</div>
             </div>
-
             <div class="input-row" style="margin-top:12px;">
                 <input type="date" id="modal-date" style="width:100%;">
             </div>
-
             <div class="input-row">
                 <input type="number" id="modal-amount">
                 <select id="modal-card">
@@ -203,16 +209,35 @@
                     <option value="현금/계좌">현금/계좌</option>
                 </select>
             </div>
-
             <div class="input-row">
                 <input type="text" id="modal-title">
             </div>
-
             <div class="modal-buttons">
                 <button class="modal-btn delete" onclick="deleteItem()">삭제</button>
                 <button class="modal-btn cancel" onclick="closeModal()">취소</button>
                 <button class="modal-btn save" id="save-btn" onclick="updateItem()">수정완료</button>
             </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="card-detail-modal">
+        <div class="card-detail-popup">
+            <div class="popup-header">
+                <h3 class="popup-title" id="pop-card-name">카드 내역</h3>
+                <button class="popup-close" onclick="closeCardDetailModal()">×</button>
+            </div>
+            
+            <div class="filter-row">
+                <select class="filter-select" id="card-filter-select" onchange="sortAndRenderCardDetails()">
+                    <option value="date-desc">최신 순</option>
+                    <option value="price-desc">금액 높은 순</option>
+                    <option value="price-asc">금액 낮은 순</option>
+                    <option value="alphabet">가나다 순</option>
+                </select>
+            </div>
+
+            <div class="popup-scroll-area" id="pop-scroll-list">
+                </div>
         </div>
     </div>
 </div>
@@ -226,6 +251,10 @@
     let currentEditingId = null; 
     let modalSelectedUser = '남편';
     let modalSelectedType = 'expense';
+
+    // 특정 카드 팝업 조회를 위한 상태 관리 변수
+    let currentActiveCardName = "";
+    let cardDetailsMap = {};
 
     function setTodayDate() {
         const tzOffset = new Date().getTimezoneOffset() * 60000;
@@ -249,19 +278,67 @@
         }
     }
 
-    // 💳 [새로운 함수] 특정 카드 이름을 누르면 하위 디테일창을 열고 닫는 토글러
-    function toggleCardDetail(cardIdStr) {
-        const detailBox = document.getElementById(`detail-${cardIdStr}`);
-        const indicator = document.getElementById(`ind-${cardIdStr}`);
-        if(!detailBox) return;
+    // 💳 [새로운 창 열기] 카드 전용 팝업 노출 함수
+    function openCardDetailModal(cardName) {
+        currentActiveCardName = cardName;
+        document.getElementById('pop-card-name').innerText = `💳 ${cardName} 내역`;
+        document.getElementById('card-filter-select').value = 'date-desc'; // 기본값 최신순 초기화
+        
+        sortAndRenderCardDetails();
+        document.getElementById('card-detail-modal').style.display = 'flex';
+    }
 
-        if (detailBox.style.display === 'none' || detailBox.style.display === '') {
-            detailBox.style.display = 'block';
-            if(indicator) indicator.innerText = '▴';
-        } else {
-            detailBox.style.display = 'none';
-            if(indicator) indicator.innerText = '▾';
+    function closeCardDetailModal() {
+        document.getElementById('card-detail-modal').style.display = 'none';
+        currentActiveCardName = "";
+    }
+
+    // 💳 [필터링 및 정렬 구현 핵심 기술]
+    function sortAndRenderCardDetails() {
+        const scrollList = document.getElementById('pop-scroll-list');
+        scrollList.innerHTML = '';
+
+        const items = cardDetailsMap[currentActiveCardName] || [];
+        if(items.length === 0) {
+            scrollList.innerHTML = '<div style="text-align:center; color:#64748b; font-size:13px; padding-top:20px;">내역이 없습니다.</div>';
+            return;
         }
+
+        const filterType = document.getElementById('card-filter-select').value;
+        let sortedItems = [...items];
+
+        // 필터링 분기 처리
+        if (filterType === 'date-desc') {
+            // 최신 순
+            sortedItems.sort((a, b) => new Date(b.date) - new Date(a.date) || b.id - a.id);
+        } else if (filterType === 'price-desc') {
+            // 금액 높은 순
+            sortedItems.sort((a, b) => b.amount - a.amount);
+        } else if (filterType === 'price-asc') {
+            // 금액 낮은 순
+            sortedItems.sort((a, b) => a.amount - b.amount);
+        } else if (filterType === 'alphabet') {
+            // 가나다 순 (내역 타이틀 기준)
+            sortedItems.sort((a, b) => String(a.title).localeCompare(String(b.title), 'ko'));
+        }
+
+        // 정렬된 리스트 화면에 구현
+        sortedItems.forEach(det => {
+            const userClass = det.user === '남편' ? 'husband' : 'wife';
+            const mDate = det.date ? det.date.substring(8, 10) : ''; 
+
+            const itemDiv = document.createElement('div');
+            itemDiv.className = 'pop-item';
+            itemDiv.innerHTML = `
+                <div class="pop-left">
+                    <span class="pop-user ${userClass}">${det.user}</span>
+                    <span class="pop-date">${mDate}일</span>
+                    <span class="pop-title">${det.title}</span>
+                </div>
+                <div class="pop-amount">${det.amount.toLocaleString()}원</div>
+            `;
+            scrollList.appendChild(itemDiv);
+        });
     }
 
     function changeUser(user) {
@@ -488,9 +565,8 @@
         let totalIncome = 0;
         let totalExpense = 0;
         
-        // 💳 카드별 합산 및 카드별 '상세 내역 아이템 배여' 구조화
         let cardTotals = {};
-        let cardDetailsMap = {};
+        cardDetailsMap = {}; // 초기화
         
         const tzOffset = new Date().getTimezoneOffset() * 60000;
         const currentMonthStr = (new Date(Date.now() - tzOffset)).toISOString().substring(0, 7);
@@ -518,7 +594,6 @@
                     }
                     cardTotals[cardKey] = (cardTotals[cardKey] || 0) + item.amount;
                     
-                    // 해당 카드 리스트 배열에 소비 항목 push
                     if(!cardDetailsMap[cardKey]) cardDetailsMap[cardKey] = [];
                     cardDetailsMap[cardKey].push(item);
                 }
@@ -551,61 +626,31 @@
             listElement.appendChild(li);
         });
 
-        // 💳 카드별 요약 및 세부 내역 매핑 렌더링
+        // 💳 카드 요약 격자 뷰 그리기 (새 창 트리거 연결)
         const cardGrid = document.getElementById('card-summary-grid');
         cardGrid.innerHTML = '';
         
         const activeCards = Object.keys(cardTotals).filter(key => cardTotals[key] > 0);
         
         if (activeCards.length === 0) {
-            cardGrid.innerHTML = '<div style="text-align: center; color: #cbd5e1; font-size: 13px; padding: 10px 0;">이번 달 카드 지출 내역이 없습니다.</div>';
+            cardGrid.innerHTML = '<div style="grid-column: span 2; text-align: center; color: #cbd5e1; font-size: 13px; padding: 10px 0;">이번 달 카드 지출 내역이 없습니다.</div>';
         } else {
-            activeCards.forEach((card, idx) => {
-                const cardIdStr = `card-idx-${idx}`; // 고유 아이디 생성
-                
-                const container = document.createElement('div');
-                container.className = 'card-row-container';
-                
-                // 1단계: 누를 수 있는 카드 버튼 박스
+            activeCards.forEach(card => {
                 const boxBtn = document.createElement('button');
-                boxBtn.className = 'box-btn card-box';
-                boxBtn.onclick = () => toggleCardDetail(cardIdStr);
+                boxBtn.className = 'card-box';
+                // 클릭하면 해당 카드 전용 모달(새 창)을 띄우는 함수 연결
+                boxBtn.onclick = () => openCardDetailModal(card);
                 boxBtn.innerHTML = `
-                    <span class="card-name">${card} <span id="ind-${cardIdStr}" style="font-size:10px; margin-left:3px; opacity:0.6;">▾</span></span>
+                    <span class="card-name">${card} ↗</span>
                     <span class="card-val">${cardTotals[card].toLocaleString()}원</span>
                 `;
-                
-                // 2단계: 클릭 시 펼쳐질 세부 내역 목록창
-                const detailList = document.createElement('div');
-                detailList.className = 'card-detail-list';
-                detailList.id = `detail-${cardIdStr}`;
-                
-                // 해당 카드의 세부 항목들 HTML 생성
-                let detailsHtml = '';
-                if(cardDetailsMap[card]) {
-                    // 날짜 순 정렬 (오래된 순 혹은 최신 순 취향 따라 가능, 여기선 날짜순 정렬)
-                    const sortedDetails = [...cardDetailsMap[card]].sort((a,b) => new Date(a.date) - new Date(b.date));
-                    sortedDetails.forEach(det => {
-                        const userClass = det.user === '남편' ? 'husband' : 'wife';
-                        const mDate = det.date ? det.date.substring(8, 10) : ''; // 일자만 표시 (예: 22일)
-                        detailsHtml += `
-                            <div class="card-detail-item">
-                                <div class="detail-left">
-                                    <span class="detail-user ${userClass}">${det.user}</span>
-                                    <span style="color:#64748b;">${mDate}일</span>
-                                    <span class="detail-title">${det.title}</span>
-                                </div>
-                                <div class="detail-amount">${det.amount.toLocaleString()}원</div>
-                            </div>
-                        `;
-                    });
-                }
-                detailList.innerHTML = detailsHtml;
-                
-                container.appendChild(boxBtn);
-                container.appendChild(detailList);
-                cardGrid.appendChild(container);
+                cardGrid.appendChild(boxBtn);
             });
+        }
+
+        // 혹시 팝업 창이 열린 상태에서 가계부가 실시간 새로고침되어 갱신될 때를 대비해 팝업 내부도 동기화 렌더링
+        if(currentActiveCardName) {
+            sortAndRenderCardDetails();
         }
 
         const balance = totalIncome - totalExpense;
