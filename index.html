@@ -58,9 +58,13 @@
         .ledger-list { list-style: none; padding: 0; margin: 0; }
         .ledger-item { display: flex; justify-content: space-between; align-items: center; padding: 14px 10px; border-bottom: 1px solid #f1f5f9; cursor: pointer; border-radius: 6px; }
         .ledger-item:hover { background-color: #f8fafc; }
+        
+        /* 색상 구분 */
+        .ledger-item.남편 { background-color: #f0f7ff; }
+        .ledger-item.아내 { background-color: #fff0f5; }
+
         .item-info { display: flex; align-items: center; gap: 8px; }
         .card-badge { font-size: 11px; background-color: #f1f5f9; color: #475569; padding: 3px 6px; border-radius: 4px; border: 1px solid #e2e8f0; }
-        /* 사용자 배지 스타일 추가 */
         .user-badge { font-size: 11px; font-weight: bold; padding: 3px 6px; border-radius: 4px; border: 1px solid #e2e8f0; }
         .user-badge.남편 { color: #0369a1; background-color: #e0f2fe; border-color: #bae6fd; }
         .user-badge.아내 { color: #be185d; background-color: #fce7f3; border-color: #fbcfe8; }
@@ -72,21 +76,18 @@
         .item-amount.expense { color: #c62828; }
         
         /* 팝업 모달 스타일 */
-        .modal-overlay { display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); justify-content: center; align-items: center; z-index: 100; }
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); justify-content: center; align-items: center; z-index: 100; }
         /* 카드 전용 팝업 */
-        .card-modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 200; justify-content: center; align-items: flex-start; padding-top: 50px; overflow-y: auto; }
+        .card-modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 200; justify-content: center; align-items: center; padding-top: 50px; }
         .modal-content { background: white; padding: 20px; border-radius: 16px; width: 85%; max-width: 380px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
-        .modal-title { font-size: 16px; font-weight: bold; margin-bottom: 15px; color: #1e293b; }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+        .modal-title { font-size: 16px; font-weight: bold; color: #1e293b; }
         .modal-buttons { display: flex; gap: 10px; margin-top: 15px; }
         .modal-btn { flex: 1; padding: 12px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 14px; }
         .modal-btn.save { background-color: #1e293b; color: white; }
         .modal-btn.delete { background-color: #ef4444; color: white; }
         .modal-btn.cancel { background-color: #e2e8f0; color: #475569; }
         
-        /* 필터 버튼 */
-        .filter-group { display: flex; gap: 5px; margin-bottom: 15px; }
-        .filter-btn { flex: 1; padding: 8px; border: 1px solid #e2e8f0; border-radius: 6px; cursor: pointer; font-size: 12px; background: #fff; }
-        .filter-btn.active { background: #1e293b; color: white; border-color: #1e293b; }
         .modal-item { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #f1f5f9; font-size: 14px; }
     </style>
 </head>
@@ -157,11 +158,13 @@
 
     <div class="card-modal-overlay" id="card-modal" onclick="closeCardModal()">
         <div class="modal-content" onclick="event.stopPropagation()">
-            <div class="modal-title" id="card-modal-title">카드 상세</div>
-            <div class="filter-group">
-                <button class="filter-btn active" id="btn-sort-date" onclick="setCardSort('date')">최신순</button>
-                <button class="filter-btn" id="btn-sort-amount" onclick="setCardSort('amount')">금액순</button>
-                <button class="filter-btn" id="btn-sort-name" onclick="setCardSort('name')">가나다순</button>
+            <div class="modal-header">
+                <div class="modal-title" id="card-modal-title">카드 상세</div>
+                <select id="sort-select" onchange="setCardSort(this.value)" style="padding: 5px; border-radius: 5px; border: 1px solid #e2e8f0; font-size: 12px;">
+                    <option value="date">최신순</option>
+                    <option value="amount">금액순</option>
+                    <option value="name">가나다순</option>
+                </select>
             </div>
             <div id="card-modal-list" style="max-height: 300px; overflow-y: auto;"></div>
             <button class="modal-btn cancel" style="margin-top:15px; width:100%;" onclick="closeCardModal()">닫기</button>
@@ -244,6 +247,8 @@
     function openCardModal(cardName) {
         currentCardModalName = cardName;
         document.getElementById('card-modal').style.display = 'flex';
+        document.getElementById('sort-select').value = 'date';
+        currentCardSort = 'date';
         renderCardModal();
     }
     function closeCardModal() {
@@ -251,8 +256,6 @@
     }
     function setCardSort(type) {
         currentCardSort = type;
-        document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-        document.getElementById(`btn-sort-${type}`).classList.add('active');
         renderCardModal();
     }
 
@@ -337,9 +340,8 @@
                 }
             }
             const li = document.createElement('li');
-            li.className = 'ledger-item';
+            li.className = `ledger-item ${item.user}`;
             li.onclick = () => openModal(item.id);
-            // 사용자 이름 표시 추가
             li.innerHTML = `
                 <div class="item-info">
                     <span class="user-badge ${item.user}">${item.user}</span>
