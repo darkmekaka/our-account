@@ -46,6 +46,13 @@
         .submit-btn { width: 100%; padding: 14px; background-color: #1e293b; color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; }
         .submit-btn:disabled { background-color: #64748b; cursor: not-allowed; }
         
+        /* 💳 카드별 요약 디자인 추가 */
+        .card-section { padding: 20px; border-bottom: 8px solid #f5f7fa; }
+        .card-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-top: 12px; }
+        .card-box { background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 10px 12px; display: flex; justify-content: space-between; align-items: center; font-size: 13px; }
+        .card-name { color: #475569; font-weight: 500; }
+        .card-val { font-weight: bold; color: #1e293b; }
+
         /* 리스트 내역 */
         .list-section { padding: 20px; flex: 1; }
         .list-title { font-size: 16px; font-weight: bold; color: #1e293b; margin-bottom: 15px; }
@@ -136,6 +143,12 @@
         <button class="submit-btn" onclick="addItem()">가계부 등록하기</button>
     </div>
 
+    <div class="card-section">
+        <div class="list-title" id="card-section-title" style="margin-bottom: 0;">이번 달 카드별 지출</div>
+        <div class="card-grid" id="card-summary-grid">
+            </div>
+    </div>
+
     <div class="list-section">
         <div class="list-title">전체 입출금 내역 (클릭 시 수정/삭제)</div>
         <ul class="ledger-list" id="ledger-list">
@@ -190,6 +203,7 @@
 </div>
 
 <script>
+    // 🔗 원본 앱 스크립트 URL 유지 완료
     const googleWebAppsUrl = "https://script.google.com/macros/s/AKfycbxhSd3uYZf0ItA9yZoj5XJyt1pJwcbxF1WNeh3QGn_GJm3u91WCAfnoDAwkziQ4P5z9/exec"; 
 
     let ledgerItems = [];
@@ -199,7 +213,6 @@
     let modalSelectedUser = '남편';
     let modalSelectedType = 'expense';
 
-    // 오늘 날짜 기본값 세팅 (KST 기준)
     function setTodayDate() {
         const tzOffset = new Date().getTimezoneOffset() * 60000;
         const localISOTime = (new Date(Date.now() - tzOffset)).toISOString().slice(0, 10);
@@ -423,33 +436,45 @@
             document.getElementById('db-balance').innerText = "0 원";
             document.getElementById('db-income').innerText = "+ 0원";
             document.getElementById('db-expense').innerText = "- 0원";
+            document.getElementById('card-summary-grid').innerHTML = ''; // 초기화
             return;
         }
 
         let totalIncome = 0;
         let totalExpense = 0;
         
-        // 현재 날짜 기준 이번 달 문자열 생성 (예: "2026-06")
+        // 💳 카드별 누적금액을 담을 객체 초기화
+        let cardTotals = {};
+        
         const tzOffset = new Date().getTimezoneOffset() * 60000;
         const currentMonthStr = (new Date(Date.now() - tzOffset)).toISOString().substring(0, 7);
         
-        document.getElementById('balance-label').innerText = `${currentMonthStr.split('-')[1]}월 정산 잔액`;
+        const currentMonthNum = currentMonthStr.split('-')[1];
+        document.getElementById('balance-label').innerText = `${currentMonthNum}월 정산 잔액`;
+        document.getElementById('card-section-title').innerText = `${currentMonthNum}월 카드별 지출`;
 
-        // 날짜 데이터 정렬 상태 유지를 고려하여 역순 정렬해 복사 (최신 항목 상단 노출)
         const displayItems = [...ledgerItems].sort((a,b) => new Date(b.date) - new Date(a.date) || b.id - a.id); 
 
         displayItems.forEach(item => {
-            // 대시보드 통계 계산은 '이번 달' 데이터만 선별 집계
             if (item.date && item.date.startsWith(currentMonthStr)) {
-                if (item.type === 'income') { totalIncome += item.amount; } 
-                else { totalExpense += item.amount; }
+                if (item.type === 'income') { 
+                    totalIncome += item.amount; 
+                } else { 
+                    totalExpense += item.amount; 
+                    
+                    // 💳 지출 내역 중 '이번 달'에 사용된 카드별 금액 합산
+                    let cardKey = item.card;
+                    if (!cardKey || cardKey === '선택안함') {
+                        cardKey = '현금/계좌';
+                    }
+                    cardTotals[cardKey] = (cardTotals[cardKey] || 0) + item.amount;
+                }
             }
 
             const li = document.createElement('li');
             li.className = 'ledger-item';
             li.onclick = () => openModal(item.id);
 
-            // [수정 핵심] 기존 색상값에 투명도를 주어 음영률을 원래의 50% 수준(alpha: 0.5)으로 적용했습니다.
             if (item.user === '남편') {
                 li.style.backgroundColor = 'rgba(224, 242, 254, 0.5)'; 
             } else if (item.user === '아내') {
@@ -473,13 +498,32 @@
             listElement.appendChild(li);
         });
 
+        // 💳 카드별 요약 격자 렌더링 시작
+        const cardGrid = document.getElementById('card-summary-grid');
+        cardGrid.innerHTML = '';
+        
+        const activeCards = Object.keys(cardTotals).filter(key => cardTotals[key] > 0);
+        
+        if (activeCards.length === 0) {
+            cardGrid.innerHTML = '<div style="grid-column: span 2; text-align: center; color: #94a3b8; font-size: 13px; padding: 15px 0;">이번 달 카드 지출 내역이 없습니다.</div>';
+        } else {
+            activeCards.forEach(card => {
+                const box = document.createElement('div');
+                box.className = 'card-box';
+                box.innerHTML = `
+                    <span class="card-name">${card}</span>
+                    <span class="card-val">${cardTotals[card].toLocaleString()}원</span>
+                `;
+                cardGrid.appendChild(box);
+            });
+        }
+
         const balance = totalIncome - totalExpense;
         document.getElementById('db-balance').innerText = `${balance.toLocaleString()} 원`;
         document.getElementById('db-income').innerText = `+ ${totalIncome.toLocaleString()}원`;
         document.getElementById('db-expense').innerText = `- ${totalExpense.toLocaleString()}원`;
     }
 
-    // 초기 실행
     setTodayDate();
     loadCloudData();
 </script>
