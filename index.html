@@ -702,7 +702,7 @@
 
         const cardGrid = document.getElementById('card-summary-grid');
         cardGrid.innerHTML = '';
-        Object.keys(cardTotals).forEach(card => {
+        Object.keys(cardTotals).sort((a, b) => cardTotals[b] - cardTotals[a]).forEach(card => {
             const btn = document.createElement('button');
             const container = document.createElement('div');
             btn.className = 'card-box';
