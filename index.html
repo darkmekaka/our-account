@@ -15,10 +15,17 @@
         .sheet-btn { display: block; text-align: center; background: rgba(255,255,255,0.1); color: #cbd5e1; padding: 6px; border-radius: 6px; text-decoration: none; font-size: 12px; margin-bottom: 10px; }
         .sheet-btn:hover { background: rgba(255,255,255,0.2); color: #ffffff; }
 
-        .balance-box { margin-top: 10px; margin-bottom: 20px; text-align: right; }
+        /* 잔액 박스 스타일 */
+        .balance-box { margin-top: 10px; text-align: right; }
         .balance-box .label { font-size: 13px; opacity: 0.7; }
-        .balance-box .amount { font-size: 30px; font-weight: bold; }
-        .summary-row { display: flex; gap: 15px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 15px; }
+        .balance-box .amount { font-size: 24px; font-weight: bold; }
+        
+        /* 온누리 잔고 배너 스타일 */
+        .onnuri-banner { background: rgba(255, 255, 255, 0.08); border-radius: 12px; padding: 12px; display: flex; flex-direction: column; align-items: center; justify-content: center; border: 1px solid rgba(255,255,255,0.1); }
+        .onnuri-banner .title { font-size: 13px; color: #cbd5e1; margin-bottom: 4px; }
+        .onnuri-banner .balance { font-size: 18px; font-weight: bold; color: #4ade80; }
+
+        .summary-row { display: flex; gap: 15px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 15px; margin-top: 15px; }
         .summary-item { flex: 1; }
         .summary-item .title { font-size: 12px; opacity: 0.7; margin-bottom: 4px; }
         .summary-item .val { font-size: 16px; font-weight: bold; }
@@ -43,6 +50,9 @@
         .card-name { color: #cbd5e1; font-weight: 500; }
         .card-val { font-weight: bold; color: #ffffff; }
 
+        .progress-wrapper { width: calc(100% - 24px); background: rgba(255,255,255,0.1); height: 5px; border-radius: 3px; margin: 0 auto 10px auto; overflow: hidden; }
+        .progress-bar { height: 100%; border-radius: 3px; transition: width 0.5s; }
+
         .input-row { display: flex; gap: 10px; margin-bottom: 12px; align-items: center; }
         input, select { padding: 12px; border: 1px solid #e2e8f0; border-radius: 8px; font-size: 15px; outline: none; background-color: #f8fafc; box-sizing: border-box; }
         input:focus, select:focus { border-color: #1e293b; background-color: #fff; }
@@ -50,7 +60,6 @@
         .input-row input { flex: 1; min-width: 0; } 
         .submit-btn { width: 100%; padding: 14px; background-color: #1e293b; color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; }
         
-        /* 리스트 내역 */
         .list-section { padding: 20px; flex: 1; }
         .list-title { font-size: 16px; font-weight: bold; color: #1e293b; margin-bottom: 15px; }
         .ledger-list { list-style: none; padding: 0; margin: 0; }
@@ -61,7 +70,6 @@
         .ledger-item:hover { opacity: 0.8; }
         
         .card-badge { font-size: 11px; background-color: #ffffff; color: #475569; padding: 3px 6px; border-radius: 4px; border: 1px solid #cbd5e1; }
-        
         .user-badge { font-size: 10px; font-weight: bold; padding: 3px 7px; border-radius: 12px; }
         .user-badge.남편 { background-color: #bae6fd; color: #075985; }
         .user-badge.아내 { background-color: #fecdd3; color: #9f1239; }
@@ -72,7 +80,6 @@
         .item-amount.income { color: #2e7d32; }
         .item-amount.expense { color: #c62828; }
         
-        /* 팝업 모달 스타일 */
         .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); justify-content: center; align-items: center; z-index: 100; }
         .card-modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 200; justify-content: center; align-items: flex-start; padding-top: 50px; overflow-y: auto; }
         .modal-content { background: white; padding: 20px; border-radius: 16px; width: 85%; max-width: 380px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
@@ -110,6 +117,9 @@
         
         <button id="card-toggle-btn" onclick="toggleCardSection()" class="sheet-btn" style="width: 100%; border: none; cursor: pointer; font-family: inherit;">💳 0월 카드별 지출 보기 ▾</button>
         <div id="card-section-wrapper" style="display: none; margin-bottom: 10px; background: rgba(255,255,255,0.05); padding: 10px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.1);">
+            <div style="text-align: right; margin-bottom: 8px;">
+                <button onclick="openCardLimitModal()" style="background: #334155; color: #cbd5e1; border: none; padding: 5px 10px; border-radius: 6px; font-size: 11px; cursor: pointer; font-family: inherit;">⚙️ 카드별 실적 목표 설정</button>
+            </div>
             <div class="card-grid" id="card-summary-grid"></div>
         </div>
 
@@ -118,15 +128,17 @@
             <div class="card-grid" id="category-summary-grid"></div>
         </div>
 
-        <div style="text-align: left; margin: 15px 0;">
-            <div style="font-size: 13px; color: #cbd5e1; margin-bottom: 2px;">온누리잔액</div>
-            <div id="onnuri-balance" style="font-size: 24px; font-weight: bold; color: white;">0원</div>
+        <div style="display: flex; gap: 10px; margin-top: 10px; margin-bottom: 5px;">
+            <div class="onnuri-banner" style="flex: 1;">
+                <div class="title">🪙 온누리 잔액</div>
+                <div class="balance" id="onnuri-balance">0원</div>
+            </div>
+            <div class="balance-box" style="flex: 1; margin: 0; display: flex; flex-direction: column; align-items: flex-end; justify-content: center;">
+                <div class="label" id="balance-label">이번 달 정산 잔액</div>
+                <div class="amount" id="db-balance">0 원</div>
+            </div>
         </div>
 
-        <div class="balance-box">
-            <div class="label" id="balance-label">이번 달 정산 잔액</div>
-            <div class="amount" id="db-balance">0 원</div>
-        </div>
         <div class="summary-row">
             <div class="summary-item income">
                 <div class="title">이번 달 수입</div>
@@ -270,12 +282,25 @@
             </div>
         </div>
     </div>
+
+    <div class="modal-overlay" id="card-limit-modal">
+        <div class="modal-content" style="max-height: 80vh; overflow-y: auto;">
+            <div class="modal-title" style="margin-bottom: 5px;">카드별 실적 목표 설정</div>
+            <p style="font-size: 12px; color: #64748b; margin-bottom: 15px; margin-top: 0;">매달 채워야 하는 카드별 실적 기준을 입력해주세요.</p>
+            <div id="card-limit-inputs-list" style="display: flex; flex-direction: column; gap: 12px;"></div>
+            <div class="modal-buttons" style="margin-top: 20px;">
+                <button class="modal-btn cancel" onclick="closeCardLimitModal()">취소</button>
+                <button class="modal-btn save" onclick="saveCardLimits()">설정 저장</button>
+            </div>
+        </div>
+    </div>
 </div>
 
 <script>
     const googleWebAppsUrl = "https://script.google.com/macros/s/AKfycbzQdP5paPPivkRuih1zXiT83GfrCGPWBNRT-FTWY2uyETRwpMfvRg_cyaBKECDf3nu6/exec"; 
 
     let ledgerItems = [];
+    let cardLimits = {}; 
     let selectedUser = '남편';
     let selectedType = 'expense'; 
     let currentEditingId = null; 
@@ -286,54 +311,34 @@
     let currentCardSort = 'date_desc'; 
     let selectedMonth = ''; 
 
-    const defaultCategories = ['식비', '교통비', '쇼핑/패션', '마트/생필품', '문화/여가', '의료/건강', '주거/통신', '카페/간식', '기타'];
+    const defaultCategories = ['식비', '교통비', '쇼핑/패션', '마트/생필품', '문화/여가', '의료/건강', '주거/통신', '카페/간식', '온누리', '기타'];
     let categories = [...defaultCategories];
 
-    function showLoading(msg) {
-        document.getElementById('loading-text').innerText = msg || "데이터를 처리하고 있습니다...";
-        document.getElementById('loading-overlay').style.display = 'flex';
-    }
-    function hideLoading() {
-        document.getElementById('loading-overlay').style.display = 'none';
-    }
-
-    function initCategories() {
-        renderCategoryDropdowns();
-    }
-
+    function showLoading(msg) { document.getElementById('loading-text').innerText = msg || "데이터를 처리하고 있습니다..."; document.getElementById('loading-overlay').style.display = 'flex'; }
+    function hideLoading() { document.getElementById('loading-overlay').style.display = 'none'; }
+    function initCategories() { renderCategoryDropdowns(); }
     function renderCategoryDropdowns() {
         const catSelect = document.getElementById('category');
         const modalCatSelect = document.getElementById('modal-category');
         const filterSelect = document.getElementById('list-category-filter');
-        
         const currentVal = catSelect.value;
         const currentModalVal = modalCatSelect.value;
-
         const optionsHtml = categories.map(cat => `<option value="${cat}">${cat}</option>`).join('');
-        
         catSelect.innerHTML = '<option value="" disabled selected hidden>카테고리 선택</option>' + optionsHtml;
         modalCatSelect.innerHTML = '<option value="" disabled selected hidden>카테고리 선택</option>' + optionsHtml;
         filterSelect.innerHTML = '<option value="">카테고리별 합산 보기</option>' + optionsHtml;
-
         if(currentVal && categories.includes(currentVal)) catSelect.value = currentVal;
         if(currentModalVal && categories.includes(currentModalVal)) modalCatSelect.value = currentModalVal;
     }
 
-    function openCategoryModal() {
-        document.getElementById('category-modal').style.display = 'flex';
-        renderCategoryManageList();
-    }
-
-    function closeCategoryModal() {
-        document.getElementById('category-modal').style.display = 'none';
-    }
-
+    function openCategoryModal() { document.getElementById('category-modal').style.display = 'flex'; renderCategoryManageList(); }
+    function closeCategoryModal() { document.getElementById('category-modal').style.display = 'none'; }
     function renderCategoryManageList() {
         const listDiv = document.getElementById('category-manage-list');
         listDiv.innerHTML = categories.map(cat => `
             <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 8px; border-bottom: 1px solid #e2e8f0;">
                 <span style="font-size: 14px; color: #334155; font-weight: 500;">${cat}</span>
-                ${cat !== '기타' ? `<button onclick="deleteCategory('${cat}', this)" style="background: #fee2e2; color: #ef4444; border: none; padding: 4px 8px; border-radius: 4px; font-size: 12px; cursor: pointer; font-weight: bold;">삭제</button>` : ''}
+                ${(cat !== '기타' && cat !== '온누리') ? `<button onclick="deleteCategory('${cat}', this)" style="background: #fee2e2; color: #ef4444; border: none; padding: 4px 8px; border-radius: 4px; font-size: 12px; cursor: pointer; font-weight: bold;">삭제</button>` : ''}
             </div>
         `).join('') || '<div style="text-align:center; padding:10px; color:#94a3b8; font-size:13px;">카테고리가 없습니다.</div>';
     }
@@ -343,126 +348,71 @@
         const name = input.value.trim();
         if (!name) { alert('카테고리 이름을 입력해주세요.'); return; }
         if (categories.includes(name)) { alert('이미 존재하는 카테고리입니다.'); return; }
-        
         showLoading("카테고리를 클라우드에 추가하고 있습니다...");
-        const sendData = { action: 'addCategory', name: name };
-        
-        fetch(googleWebAppsUrl, { method: 'POST', body: JSON.stringify(sendData) })
+        fetch(googleWebAppsUrl, { method: 'POST', body: JSON.stringify({ action: 'addCategory', name: name }) })
         .then(r => r.json())
-        .then(result => {
-            if (result.result === "success") {
-                categories.push(name);
-                input.value = '';
-                renderCategoryManageList();
-                renderCategoryDropdowns();
-            } else {
-                alert('카테고리 클라우드 저장 실패: ' + result.error);
-            }
-        }).catch(err => {
-            alert('네트워크 오류가 발생했습니다.');
-        }).finally(() => hideLoading());
+        .then(result => { if (result.result === "success") { categories.push(name); input.value = ''; renderCategoryManageList(); renderCategoryDropdowns(); } else { alert('카테고리 클라우드 저장 실패: ' + result.error); } }).catch(err => alert('네트워크 오류가 발생했습니다.')).finally(() => hideLoading());
     }
 
     function deleteCategory(name, btnElement) {
-        if (name === '기타') return;
+        if (name === '기타' || name === '온누리') return;
         if (!confirm(`'${name}' 카테고리를 완전히 삭제하시겠습니까?`)) return;
-        
         showLoading("카테고리를 클라우드에서 제거하고 있습니다...");
-        const sendData = { action: 'deleteCategory', name: name };
-        
-        fetch(googleWebAppsUrl, { method: 'POST', body: JSON.stringify(sendData) })
+        fetch(googleWebAppsUrl, { method: 'POST', body: JSON.stringify({ action: 'deleteCategory', name: name }) })
         .then(r => r.json())
-        .then(result => {
-            if (result.result === "success") {
-                categories = categories.filter(cat => cat !== name);
-                renderCategoryManageList();
-                renderCategoryDropdowns();
-            } else {
-                alert('카테고리 클라우드 삭제 실패: ' + result.error);
-            }
-        }).catch(err => {
-            alert('네트워크 오류가 발생했습니다.');
-        }).finally(() => hideLoading());
+        .then(result => { if (result.result === "success") { categories = categories.filter(cat => cat !== name); renderCategoryManageList(); renderCategoryDropdowns(); } else { alert('카테고리 클라우드 삭제 실패: ' + result.error); } }).catch(err => alert('네트워크 오류가 발생했습니다.')).finally(() => hideLoading());
     }
 
-    function initHeader() {
-        const tzOffset = new Date().getTimezoneOffset() * 60000;
-        selectedMonth = (new Date(Date.now() - tzOffset)).toISOString().substring(0, 7);
-        document.getElementById('month-picker').value = selectedMonth;
-        updateToggleBtnTexts();
-    }
-
+    function initHeader() { const tzOffset = new Date().getTimezoneOffset() * 60000; selectedMonth = (new Date(Date.now() - tzOffset)).toISOString().substring(0, 7); document.getElementById('month-picker').value = selectedMonth; updateToggleBtnTexts(); }
     function updateToggleBtnTexts() {
         const monthNum = parseInt(selectedMonth.substring(5, 7));
-        
         const cardBtn = document.getElementById('card-toggle-btn');
         const cardWrapper = document.getElementById('card-section-wrapper');
-        if (cardWrapper.style.display === 'block') {
-            cardBtn.innerText = `💳 ${monthNum}월 카드별 지출 접기 ▴`;
-        } else {
-            cardBtn.innerText = `💳 ${monthNum}월 카드별 지출 보기 ▾`;
-        }
-
+        cardBtn.innerText = (cardWrapper.style.display === 'block') ? `💳 ${monthNum}월 카드별 지출 접기 ▴` : `💳 ${monthNum}월 카드별 지출 보기 ▾`;
         const catBtn = document.getElementById('category-toggle-btn');
         const catWrapper = document.getElementById('category-section-wrapper');
-        if (catWrapper.style.display === 'block') {
-            catBtn.innerText = `📊 ${monthNum}월 카테고리별 지출 접기 ▴`;
-        } else {
-            catBtn.innerText = `📊 ${monthNum}월 카테고리별 지출 보기 ▾`;
-        }
+        catBtn.innerText = (catWrapper.style.display === 'block') ? `📊 ${monthNum}월 카테고리별 지출 접기 ▴` : `📊 ${monthNum}월 카테고리별 지출 보기 ▾`;
     }
 
-    function setTodayDate() {
-        const tzOffset = new Date().getTimezoneOffset() * 60000;
-        const localISOTime = (new Date(Date.now() - tzOffset)).toISOString().slice(0, 10);
-        document.getElementById('date').value = localISOTime;
+    function setTodayDate() { const tzOffset = new Date().getTimezoneOffset() * 60000; const localISOTime = (new Date(Date.now() - tzOffset)).toISOString().slice(0, 10); document.getElementById('date').value = localISOTime; }
+    function changeMonth(val) { if (!val) return; selectedMonth = val; updateToggleBtnTexts(); renderApp(); }
+    function toggleCardSection() { const wrapper = document.getElementById('card-section-wrapper'); wrapper.style.display = (wrapper.style.display === 'none' || wrapper.style.display === '') ? 'block' : 'none'; updateToggleBtnTexts(); }
+    function toggleCategorySection() { const wrapper = document.getElementById('category-section-wrapper'); wrapper.style.display = (wrapper.style.display === 'none' || wrapper.style.display === '') ? 'block' : 'none'; updateToggleBtnTexts(); }
+
+    function openCardLimitModal() {
+        document.getElementById('card-limit-modal').style.display = 'flex';
+        const listDiv = document.getElementById('card-limit-inputs-list');
+        const targetCards = ['현대카드', 'bc카드', '국민카드', '롯데카드', '신한카드', 'NH카드'];
+        listDiv.innerHTML = targetCards.map(card => `
+            <div style="display: flex; align-items: center; justify-content: space-between; gap: 10px;">
+                <span style="font-size: 14px; font-weight: bold; color: #334155; width: 75px;">${card}</span>
+                <input type="number" id="limit-${card}" value="${cardLimits[card] || ''}" placeholder="기준액" style="flex: 1; padding: 10px; font-size: 14px; margin: 0;">
+                <span style="font-size: 13px; color: #64748b;">원</span>
+            </div>
+        `).join('');
+    }
+    function closeCardLimitModal() { document.getElementById('card-limit-modal').style.display = 'none'; }
+    function saveCardLimits() {
+        const targetCards = ['현대카드', 'bc카드', '국민카드', '롯데카드', '신한카드', 'NH카드'];
+        const newLimits = {};
+        targetCards.forEach(card => { const val = document.getElementById(`limit-${card}`).value; newLimits[card] = val ? parseInt(val) : 0; });
+        showLoading("실적 설정 구간을 서버에 동기화 중입니다...");
+        fetch(googleWebAppsUrl, { method: 'POST', body: JSON.stringify({ action: 'saveCardLimits', limits: newLimits }) })
+        .then(r => r.json()).then(result => { if (result.result === "success") { cardLimits = newLimits; closeCardLimitModal(); renderApp(); } else { alert('실적 설정 저장 실패: ' + result.error); } }).catch(err => alert('네트워크 오류가 발생했습니다.')).finally(() => hideLoading());
     }
 
-    function changeMonth(val) {
-        if (!val) return;
-        selectedMonth = val;
-        updateToggleBtnTexts();
-        renderApp();
-    }
-
-    function toggleCardSection() {
-        const wrapper = document.getElementById('card-section-wrapper');
-        wrapper.style.display = (wrapper.style.display === 'none' || wrapper.style.display === '') ? 'block' : 'none';
-        updateToggleBtnTexts();
-    }
-
-    function toggleCategorySection() {
-        const wrapper = document.getElementById('category-section-wrapper');
-        wrapper.style.display = (wrapper.style.display === 'none' || wrapper.style.display === '') ? 'block' : 'none';
-        updateToggleBtnTexts();
-    }
-
-    function openCardModal(cardName) {
-        currentCardModalName = cardName;
-        document.getElementById('card-modal').style.display = 'flex';
-        document.getElementById('card-sort-select').value = currentCardSort;
-        renderCardModal();
-    }
-    function closeCardModal() {
-        document.getElementById('card-modal').style.display = 'none';
-    }
-    function setCardSort(val) {
-        currentCardSort = val;
-        renderCardModal();
-    }
-
+    function openCardModal(cardName) { currentCardModalName = cardName; document.getElementById('card-modal').style.display = 'flex'; document.getElementById('card-sort-select').value = currentCardSort; renderCardModal(); }
+    function closeCardModal() { document.getElementById('card-modal').style.display = 'none'; }
+    function setCardSort(val) { currentCardSort = val; renderCardModal(); }
     function renderCardModal() {
         const modalList = document.getElementById('card-modal-list');
         document.getElementById('card-modal-title').innerText = currentCardModalName;
-        
         let filtered = ledgerItems.filter(i => i.card === currentCardModalName && i.date && i.date.startsWith(selectedMonth));
-        
         if(currentCardSort === 'amt_desc') filtered.sort((a,b) => b.amount - a.amount);
         else if(currentCardSort === 'amt_asc') filtered.sort((a,b) => a.amount - b.amount);
         else if(currentCardSort === 'name') filtered.sort((a,b) => a.title.localeCompare(b.title));
         else if(currentCardSort === 'date_asc') filtered.sort((a,b) => new Date(a.date) - new Date(b.date));
         else filtered.sort((a,b) => new Date(b.date) - new Date(a.date));
-
         modalList.innerHTML = filtered.map(item => `
             <li class="ledger-item ${item.user}" onclick="openModal(${item.id}); closeCardModal();">
                 <div style="display: flex; flex-direction: column; gap: 5px; flex: 1;">
@@ -482,274 +432,102 @@
     function openCategoryDetailModal(catName) {
         if (!catName) return;
         document.getElementById('category-detail-modal').style.display = 'flex';
-        
-        const monthNum = parseInt(selectedMonth.substring(5, 7));
-        document.getElementById('category-detail-title').innerText = `${monthNum}월 내역 정보`;
-        
+        document.getElementById('category-detail-title').innerText = `${parseInt(selectedMonth.substring(5, 7))}월 내역 정보`;
         let filtered = ledgerItems.filter(i => i.category === catName && i.date && i.date.startsWith(selectedMonth));
-        
-        let totalExp = 0;
-        let cardTotalsMap = {}; 
-
-        filtered.forEach(i => {
-            if (i.type === 'expense' || i.type === '지출') {
-                totalExp += i.amount;
-                let cardKey = i.card || '현금/계좌';
-                cardTotalsMap[cardKey] = (cardTotalsMap[cardKey] || 0) + i.amount;
-            }
-        });
-        
-        let cardSummaryHtml = Object.keys(cardTotalsMap).map(card => `
-            <div style="display: flex; justify-content: space-between; font-size: 13px; color: #475569; margin-top: 5px; padding-left: 8px;">
-                <span>• ${card}</span>
-                <span>${cardTotalsMap[card].toLocaleString()}원</span>
-            </div>
-        `).join('');
-
-        const summaryBox = document.getElementById('category-detail-summary');
-        summaryBox.innerHTML = `
-            <div style="border-bottom: 1px solid #e2e8f0; padding-bottom: 8px; margin-bottom: 8px;">
-                <div style="display: flex; justify-content: space-between; align-items: center; font-weight: bold; color: #1e293b;">
-                    <span>[${catName}] 총 지출</span>
-                    <span style="color: #c62828; font-size: 16px;">${totalExp.toLocaleString()}원</span>
-                </div>
-            </div>
-            <div>
-                <div style="font-size: 12px; font-weight: bold; color: #64748b;">💳 카드별 합산 내역</div>
-                ${cardSummaryHtml || '<div style="font-size:12px; color:#94a3b8; padding-top:4px; padding-left:8px;">지출 카드 정보가 없습니다.</div>'}
-            </div>
-        `;
-        
-        const listContainer = document.getElementById('category-detail-list');
-        listContainer.innerHTML = filtered.map(item => `
+        let totalExp = 0; let cardTotalsMap = {}; 
+        filtered.forEach(i => { if (i.type === 'expense' || i.type === '지출') { totalExp += i.amount; let cardKey = i.card || '현금/계좌'; cardTotalsMap[cardKey] = (cardTotalsMap[cardKey] || 0) + i.amount; } });
+        let cardSummaryHtml = Object.keys(cardTotalsMap).map(card => `<div style="display: flex; justify-content: space-between; font-size: 13px; color: #475569; margin-top: 5px; padding-left: 8px;"><span>• ${card}</span><span>${cardTotalsMap[card].toLocaleString()}원</span></div>`).join('');
+        document.getElementById('category-detail-summary').innerHTML = `
+            <div style="border-bottom: 1px solid #e2e8f0; padding-bottom: 8px; margin-bottom: 8px;"><div style="display: flex; justify-content: space-between; align-items: center; font-weight: bold; color: #1e293b;"><span>[${catName}] 총 지출</span><span style="color: #c62828; font-size: 16px;">${totalExp.toLocaleString()}원</span></div></div>
+            <div><div style="font-size: 12px; font-weight: bold; color: #64748b;">💳 카드별 합산 내역</div>${cardSummaryHtml || '<div style="font-size:12px; color:#94a3b8; padding-top:4px; padding-left:8px;">지출 카드 정보가 없습니다.</div>'}</div>`;
+        document.getElementById('category-detail-list').innerHTML = filtered.map(item => `
             <div class="ledger-item ${item.user}" style="border-radius:6px; margin-bottom:5px;" onclick="openModal(${item.id}); closeCategoryDetailModal();">
-                <div style="display: flex; flex-direction: column; gap: 5px; flex: 1;">
-                    <div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
-                        <span class="user-badge ${item.user}">${item.user}</span>
-                        <span class="date-text">${item.date.substring(5)}</span>
-                        <span class="card-badge">${item.card || '현금/계좌'}</span>
-                        <span class="card-badge" style="background-color: #e2e8f0;">${item.category || '기타'}</span>
-                    </div>
-                    <div class="item-title" style="padding-left: 2px;">${item.title}</div>
-                </div>
-                <div class="item-amount ${item.type === 'income' || item.type === '수입' ? 'income' : 'expense'}" style="margin-left:10px; flex-shrink:0;">
-                    ${item.type === 'income' || item.type === '수입' ? '+' : '-'}${item.amount.toLocaleString()}원
-                </div>
-            </div>
-        `).join('') || '<div style="text-align:center; padding:20px; color:#94a3b8; font-size:13px;">해당 카테고리의 거래 내역이 존재하지 않습니다.</div>';
-        
+                <div style="display: flex; flex-direction: column; gap: 5px; flex: 1;"><div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap;"><span class="user-badge ${item.user}">${item.user}</span><span class="date-text">${item.date.substring(5)}</span><span class="card-badge">${item.card || '현금/계좌'}</span><span class="card-badge" style="background-color: #e2e8f0;">${item.category || '기타'}</span></div><div class="item-title" style="padding-left: 2px;">${item.title}</div></div>
+                <div class="item-amount ${(item.type === 'income' || item.type === '수입') ? 'income' : 'expense'}" style="margin-left:10px; flex-shrink:0;">${(item.type === 'income' || item.type === '수입') ? '+' : '-'}${item.amount.toLocaleString()}원</div>
+            </div>`).join('') || '<div style="text-align:center; padding:20px; color:#94a3b8; font-size:13px;">내역이 존재하지 않습니다.</div>';
         document.getElementById('list-category-filter').value = "";
     }
-
-    function closeCategoryDetailModal() {
-        document.getElementById('category-detail-modal').style.display = 'none';
-    }
-
-    function changeUser(user) {
-        selectedUser = user;
-        document.getElementById('btn-user-husband').classList.toggle('active', user === '남편');
-        document.getElementById('btn-user-wife').classList.toggle('active', user === '아내');
-    }
-    function selectType(type) {
-        selectedType = type;
-        document.getElementById('btn-inc').classList.toggle('active', type === 'income');
-        document.getElementById('btn-exp').classList.toggle('active', type === 'expense');
-        const cardSelect = document.getElementById('card');
-        cardSelect.disabled = (type === 'income');
-        if(type === 'income') cardSelect.value = '선택안함';
-    }
+    function closeCategoryDetailModal() { document.getElementById('category-detail-modal').style.display = 'none'; }
+    function changeUser(user) { selectedUser = user; document.getElementById('btn-user-husband').classList.toggle('active', user === '남편'); document.getElementById('btn-user-wife').classList.toggle('active', user === '아내'); }
+    function selectType(type) { selectedType = type; document.getElementById('btn-inc').classList.toggle('active', type === 'income'); document.getElementById('btn-exp').classList.toggle('active', type === 'expense'); const cardSelect = document.getElementById('card'); cardSelect.disabled = (type === 'income'); if(type === 'income') cardSelect.value = '선택안함'; }
     function changeModalUser(user) { modalSelectedUser = user; document.getElementById('modal-user-husband').classList.toggle('active', user === '남편'); document.getElementById('modal-user-wife').classList.toggle('active', user === '아내'); }
     function selectModalType(type) { modalSelectedType = type; document.getElementById('modal-inc').classList.toggle('active', type === 'income'); document.getElementById('modal-exp').classList.toggle('active', type === 'expense'); const mCardSelect = document.getElementById('modal-card'); mCardSelect.disabled = (type === 'income'); if(type === 'income') mCardSelect.value = '선택안함'; }
-    
     function loadCloudData() {
         showLoading("서버 클라우드 데이터를 동기화하고 있습니다...");
-        fetch(googleWebAppsUrl)
-        .then(res => res.json())
-        .then(data => { 
-            ledgerItems = data.items || [];
-            if (data.categories && data.categories.length > 0) {
-                categories = data.categories;
-            }
-            renderCategoryDropdowns();
-            renderApp(); 
-        })
-        .catch(err => console.error(err))
-        .finally(() => hideLoading());
+        fetch(googleWebAppsUrl).then(res => res.json()).then(data => { ledgerItems = data.items || []; if (data.categories && data.categories.length > 0) categories = data.categories; cardLimits = data.cardLimits || {}; renderCategoryDropdowns(); renderApp(); }).catch(err => console.error(err)).finally(() => hideLoading());
     }
-    
     function addItem() {
-        const date = document.getElementById('date').value;
-        const card = document.getElementById('card').value;
-        const title = document.getElementById('title').value;
-        const amount = document.getElementById('amount').value;
-        const category = document.getElementById('category').value; 
-        
+        const date = document.getElementById('date').value; const card = document.getElementById('card').value; const title = document.getElementById('title').value; const amount = document.getElementById('amount').value; const category = document.getElementById('category').value; 
         if (!date || !title || !amount || !category) { alert('날짜, 금액, 카테고리, 내역을 모두 선택 및 입력해주세요!'); return; }
-        const uniqueId = Date.now();
-        
-        showLoading("가계부 항목을 원격 시트에 등록하는 중입니다...");
-        
-        const sendData = { action: 'add', id: uniqueId, date, type: selectedType === 'income' ? '수입' : '지출', user: selectedUser, title, amount: parseInt(amount), card, category };
-        
-        fetch(googleWebAppsUrl, { method: 'POST', body: JSON.stringify(sendData) })
-        .then(r => r.json()).then(result => {
-            ledgerItems.push({ id: uniqueId, date, type: selectedType, user: selectedUser, title, amount: parseInt(amount), card, category });
-            renderApp();
-            document.getElementById('title').value = '';
-            document.getElementById('amount').value = '';
-            document.getElementById('category').value = ''; 
-        }).finally(() => hideLoading());
+        const uniqueId = Date.now(); showLoading("가계부 항목을 원격 시트에 등록하는 중입니다...");
+        fetch(googleWebAppsUrl, { method: 'POST', body: JSON.stringify({ action: 'add', id: uniqueId, date, type: selectedType === 'income' ? '수입' : '지출', user: selectedUser, title, amount: parseInt(amount), card, category }) })
+        .then(r => r.json()).then(() => { ledgerItems.push({ id: uniqueId, date, type: selectedType, user: selectedUser, title, amount: parseInt(amount), card, category }); renderApp(); document.getElementById('title').value = ''; document.getElementById('amount').value = ''; document.getElementById('category').value = ''; }).finally(() => hideLoading());
     }
-    
     function openModal(id) { 
-        currentEditingId = id; 
-        const item = ledgerItems.find(i => i.id === id); 
-        document.getElementById('modal-date').value = item.date; 
-        document.getElementById('modal-title').value = item.title; 
-        document.getElementById('modal-amount').value = item.amount; 
-        changeModalUser(item.user); 
-        selectModalType(item.type); 
-        document.getElementById('modal-card').value = item.card || '선택안함'; 
-        document.getElementById('modal-category').value = item.category || '기타'; 
-        document.getElementById('edit-modal').style.display = 'flex'; 
+        currentEditingId = id; const item = ledgerItems.find(i => i.id === id); 
+        document.getElementById('modal-date').value = item.date; document.getElementById('modal-title').value = item.title; document.getElementById('modal-amount').value = item.amount; changeModalUser(item.user); selectModalType(item.type); document.getElementById('modal-card').value = item.card || '선택안함'; document.getElementById('modal-category').value = item.category || '기타'; document.getElementById('edit-modal').style.display = 'flex'; 
     }
-    
     function closeModal() { document.getElementById('edit-modal').style.display = 'none'; }
-    
     function updateItem() { 
-        const uDate = document.getElementById('modal-date').value; 
-        const uCard = document.getElementById('modal-card').value; 
-        const uTitle = document.getElementById('modal-title').value; 
-        const uAmount = document.getElementById('modal-amount').value; 
-        const uCategory = document.getElementById('modal-category').value; 
-        
+        const uDate = document.getElementById('modal-date').value; const uCard = document.getElementById('modal-card').value; const uTitle = document.getElementById('modal-title').value; const uAmount = document.getElementById('modal-amount').value; const uCategory = document.getElementById('modal-category').value; 
         if (!uCategory) { alert('카테고리를 선택해 주세요.'); return; }
-
-        showLoading("가계부 내용을 원격 시트에서 수정하고 있습니다...");
-        const sendData = { action: 'update', id: currentEditingId, date: uDate, type: modalSelectedType === 'income' ? '수입' : '지출', user: modalSelectedUser, title: uTitle, amount: parseInt(uAmount), card: uCard, category: uCategory }; 
-        
-        fetch(googleWebAppsUrl, { method: 'POST', body: JSON.stringify(sendData) }).then(() => { 
-            const item = ledgerItems.find(i => i.id === currentEditingId); 
-            item.date = uDate; 
-            item.user = modalSelectedUser; 
-            item.title = uTitle; 
-            item.amount = parseInt(uAmount); 
-            item.type = modalSelectedType; 
-            item.card = uCard; 
-            item.category = uCategory; 
-            closeModal(); 
-            renderApp(); 
-        }).finally(() => hideLoading()); 
+        showLoading("가계부 내용을 수정하고 있습니다...");
+        fetch(googleWebAppsUrl, { method: 'POST', body: JSON.stringify({ action: 'update', id: currentEditingId, date: uDate, type: modalSelectedType === 'income' ? '수입' : '지출', user: modalSelectedUser, title: uTitle, amount: parseInt(uAmount), card: uCard, category: uCategory }) }).then(() => { const item = ledgerItems.find(i => i.id === currentEditingId); item.date = uDate; item.user = modalSelectedUser; item.title = uTitle; item.amount = parseInt(uAmount); item.type = modalSelectedType; item.card = uCard; item.category = uCategory; closeModal(); renderApp(); }).finally(() => hideLoading()); 
     }
-    
     function deleteItem() { 
-        if (!confirm("삭제하시겠습니까?")) return; 
-        showLoading("선택한 내역을 삭제하는 중입니다...");
-        fetch(googleWebAppsUrl, { method: 'POST', body: JSON.stringify({ action: 'delete', id: currentEditingId }) }).then(() => { 
-            ledgerItems = ledgerItems.filter(i => i.id !== currentEditingId); 
-            closeModal(); 
-            renderApp(); 
-        }).finally(() => hideLoading()); 
+        if (!confirm("삭제하시겠습니까?")) return; showLoading("삭제하는 중입니다...");
+        fetch(googleWebAppsUrl, { method: 'POST', body: JSON.stringify({ action: 'delete', id: currentEditingId }) }).then(() => { ledgerItems = ledgerItems.filter(i => i.id !== currentEditingId); closeModal(); renderApp(); }).finally(() => hideLoading()); 
     }
 
     function renderApp() {
-        const listElement = document.getElementById('ledger-list');
-        listElement.innerHTML = '';
-        let totalIncome = 0; let totalExpense = 0;
-        let onnuriBalance = 0; // 온누리 잔액 계산 변수
-        let cardTotals = {};
-        let categoryTotals = {}; 
-        
-        const monthNum = parseInt(selectedMonth.substring(5, 7));
-        
-        document.getElementById('dynamic-list-title').innerText = `${monthNum}월 수입 지출 내역`;
-        updateToggleBtnTexts();
-
-        // 1. 데이터 정렬 (요청사항: 신규 데이터가 최상단)
-        ledgerItems.sort((a, b) => new Date(b.date) - new Date(a.date) || b.id - a.id);
-
+        const listElement = document.getElementById('ledger-list'); listElement.innerHTML = '';
+        let totalIncome = 0; let totalExpense = 0; let cardTotals = {}; let categoryTotals = {}; 
+        let onnuriBalance = 0;
         ledgerItems.forEach(item => {
-            // 온누리 잔액 계산 (전체 기간 합산)
-            if (item.type === 'expense' || item.type === '지출') {
+            if ((item.type === 'expense' || item.type === '지출')) {
                 if ((item.card === '현금/계좌' || item.card === '선택안함') && item.category === '온누리') onnuriBalance += item.amount;
                 if (item.card === '온누리') onnuriBalance -= item.amount;
             }
-
+        });
+        document.getElementById('onnuri-balance').innerText = `${onnuriBalance.toLocaleString()}원`;
+        const monthNum = parseInt(selectedMonth.substring(5, 7));
+        document.getElementById('dynamic-list-title').innerText = `${monthNum}월 수입 지출 내역`;
+        updateToggleBtnTexts();
+        ledgerItems.sort((a, b) => (new Date(b.date) - new Date(a.date)) || (b.id - a.id)).forEach(item => {
             if (item.date && item.date.startsWith(selectedMonth)) {
-                if (item.type === 'income' || item.type === '수입') {
-                    totalIncome += item.amount;
-                } else {
-                    totalExpense += item.amount;
-                    
-                    let cardKey = item.card || '현금/계좌';
-                    cardTotals[cardKey] = (cardTotals[cardKey] || 0) + item.amount;
-
-                    let catKey = item.category || '기타';
-                    categoryTotals[catKey] = (categoryTotals[catKey] || 0) + item.amount;
+                if (item.type === 'income' || item.type === '수입') totalIncome += item.amount;
+                else {
+                    let cardKey = item.card || '현금/계좌'; cardTotals[cardKey] = (cardTotals[cardKey] || 0) + item.amount;
+                    let catKey = item.category || '기타'; categoryTotals[catKey] = (categoryTotals[catKey] || 0) + item.amount;
+                    if (item.card !== '온누리') totalExpense += item.amount;
                 }
-
-                const li = document.createElement('li');
-                li.className = `ledger-item ${item.user}`; 
-                li.onclick = () => openModal(item.id);
-                li.innerHTML = `
-                    <div style="display: flex; flex-direction: column; gap: 5px; flex: 1;">
-                        <div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
-                            <span class="user-badge ${item.user}">${item.user}</span>
-                            <span class="date-text">${item.date.substring(5)}</span>
-                            <span class="card-badge">${item.card || '현금/계좌'}</span>
-                            <span class="card-badge" style="background-color: #e2e8f0;">${item.category || '기타'}</span>
-                        </div>
-                        <div class="item-title" style="padding-left: 2px;">${item.title}</div>
-                    </div>
-                    <div class="item-amount ${item.type === 'income' || item.type === '수입' ? 'income' : 'expense'}" style="margin-left: 10px; flex-shrink: 0;">
-                        ${item.type === 'income' || item.type === '수입' ? '+' : '-'}${item.amount.toLocaleString()}원
-                    </div>`;
+                const li = document.createElement('li'); li.className = `ledger-item ${item.user}`; li.onclick = () => openModal(item.id);
+                li.innerHTML = `<div style="display: flex; flex-direction: column; gap: 5px; flex: 1;"><div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap;"><span class="user-badge ${item.user}">${item.user}</span><span class="date-text">${item.date.substring(5)}</span><span class="card-badge">${item.card || '현금/계좌'}</span><span class="card-badge" style="background-color: #e2e8f0;">${item.category || '기타'}</span></div><div class="item-title" style="padding-left: 2px;">${item.title}</div></div><div class="item-amount ${(item.type === 'income' || item.type === '수입') ? 'income' : 'expense'}" style="margin-left: 10px; flex-shrink: 0;">${(item.type === 'income' || item.type === '수입') ? '+' : '-'}${item.amount.toLocaleString()}원</div>`;
                 listElement.appendChild(li);
             }
         });
-
-        if(listElement.children.length === 0) {
-            listElement.innerHTML = `<div style="text-align:center; padding:30px; color:#94a3b8; font-size:14px;">${monthNum}월의 가계부 데이터가 없습니다.</div>`;
-        }
-
-        // 온누리 잔액 표시
-        document.getElementById('onnuri-balance').innerText = `${onnuriBalance.toLocaleString()}원`;
-
-        const cardGrid = document.getElementById('card-summary-grid');
-        cardGrid.innerHTML = '';
+        if(listElement.children.length === 0) listElement.innerHTML = `<div style="text-align:center; padding:30px; color:#94a3b8; font-size:14px;">데이터가 없습니다.</div>`;
+        const cardGrid = document.getElementById('card-summary-grid'); cardGrid.innerHTML = '';
         Object.keys(cardTotals).sort((a, b) => cardTotals[b] - cardTotals[a]).forEach(card => {
-            const btn = document.createElement('button');
-            const container = document.createElement('div');
-            btn.className = 'card-box';
-            btn.onclick = () => openCardModal(card);
-            btn.innerHTML = `<span class="card-name">${card}</span><span class="card-val">${cardTotals[card].toLocaleString()}원</span>`;
-            container.className = 'card-row-container';
-            container.appendChild(btn);
+            const container = document.createElement('div'); container.className = 'card-row-container'; container.style.marginBottom = '6px';
+            const btn = document.createElement('button'); btn.className = 'card-box'; btn.onclick = () => openCardModal(card);
+            const limit = cardLimits[card] || 0;
+            if (limit > 0 && card !== '현금/계좌' && card !== '온누리') {
+                const percent = Math.min(Math.round((cardTotals[card] / limit) * 100), 100);
+                btn.innerHTML = `<span class="card-name">${card} <span style="font-size:11px; opacity:0.6;">(목표: ${(limit/10000).toLocaleString()}만)</span></span><span class="card-val">${cardTotals[card].toLocaleString()}원 (${percent}%)</span>`;
+                container.appendChild(btn); container.insertAdjacentHTML('beforeend', `<div class="progress-wrapper"><div class="progress-bar" style="width: ${percent}%; background-color: ${percent >= 100 ? '#4ade80' : (percent >= 80 ? '#fbbf24' : '#38bdf8')};"></div></div>`);
+            } else { btn.innerHTML = `<span class="card-name">${card}</span><span class="card-val">${cardTotals[card].toLocaleString()}원</span>`; container.appendChild(btn); }
             cardGrid.appendChild(container);
         });
-
-        const categoryGrid = document.getElementById('category-summary-grid');
-        categoryGrid.innerHTML = '';
+        const categoryGrid = document.getElementById('category-summary-grid'); categoryGrid.innerHTML = '';
         Object.keys(categoryTotals).sort((a,b) => categoryTotals[b] - categoryTotals[a]).forEach(cat => {
-            const btn = document.createElement('button');
-            const container = document.createElement('div');
-            btn.className = 'card-box';
-            btn.onclick = () => openCategoryDetailModal(cat); 
-            btn.innerHTML = `<span class="card-name">${cat}</span><span class="card-val">${categoryTotals[cat].toLocaleString()}원</span>`;
-            container.className = 'card-row-container';
-            container.appendChild(btn);
-            categoryGrid.appendChild(container);
+            const btn = document.createElement('button'); const container = document.createElement('div'); btn.className = 'card-box'; btn.onclick = () => openCategoryDetailModal(cat); btn.innerHTML = `<span class="card-name">${cat}</span><span class="card-val">${categoryTotals[cat].toLocaleString()}원</span>`; container.className = 'card-row-container'; container.appendChild(btn); categoryGrid.appendChild(container);
         });
-
         document.getElementById('db-balance').innerText = `${(totalIncome - totalExpense).toLocaleString()} 원`;
         document.getElementById('db-income').innerText = `+ ${totalIncome.toLocaleString()}원`;
         document.getElementById('db-expense').innerText = `- ${totalExpense.toLocaleString()}원`;
     }
-
-    initHeader();
-    setTodayDate();
-    initCategories();
-    loadCloudData();
+    initHeader(); setTodayDate(); initCategories(); loadCloudData();
 </script>
 
 </body>
