@@ -42,9 +42,7 @@
         .progress-bar { height: 100%; border-radius: 3px; transition: width 0.5s; }
 
         .input-row { display: flex; gap: 10px; margin-bottom: 12px; align-items: center; }
-        
-        /* 높이 일괄 수정을 위해 height: 48px 부여 및 패딩 조정 */
-        input, select { height: 48px; padding: 0 12px; border: 1px solid #e2e8f0; border-radius: 8px; font-size: 15px; outline: none; background-color: #f8fafc; box-sizing: border-box; }
+        input, select { padding: 12px; border: 1px solid #e2e8f0; border-radius: 8px; font-size: 15px; outline: none; background-color: #f8fafc; box-sizing: border-box; }
         input:focus, select:focus { border-color: #1e293b; background-color: #fff; }
         .input-row select { width: 35%; flex-shrink: 0; } 
         .input-row input { flex: 1; min-width: 0; } 
@@ -71,7 +69,10 @@
         .item-amount.expense { color: #c62828; }
         
         .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); justify-content: center; align-items: center; z-index: 100; }
-        .card-modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 200; justify-content: center; align-items: flex-start; padding-top: 50px; overflow-y: auto; }
+        
+        /* 💡 수정: 모달창 화면 중앙 위치 변경 및 패딩 제거 */
+        .card-modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 200; justify-content: center; align-items: center; overflow-y: auto; }
+        
         .modal-content { background: white; padding: 20px; border-radius: 16px; width: 85%; max-width: 380px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
         .modal-header-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
         .modal-title { font-size: 16px; font-weight: bold; color: #1e293b; }
@@ -81,7 +82,7 @@
         .modal-btn.delete { background-color: #ef4444; color: white; }
         .modal-btn.cancel { background-color: #e2e8f0; color: #475569; }
         
-        #card-sort-select { padding: 6px; border-radius: 6px; border: 1px solid #cbd5e1; font-size: 12px; background: white; }
+        select { padding: 6px; border-radius: 6px; border: 1px solid #cbd5e1; font-size: 12px; background: white; }
 
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     </style>
@@ -100,11 +101,28 @@
         <h1>쑥잠이네 가계부</h1>
         
         <div style="text-align: center; margin-bottom: 15px;">
-            <input type="month" id="month-picker" onchange="changeMonth(this.value)" style="padding: 8px 14px; font-size: 15px; border-radius: 8px; border: none; background-color: #334155; color: #ffffff; font-weight: bold; font-family: inherit; text-align: center; cursor: pointer; outline: none; height: auto;">
+            <input type="month" id="month-picker" onchange="changeMonth(this.value)" style="padding: 8px 14px; font-size: 15px; border-radius: 8px; border: none; background-color: #334155; color: #ffffff; font-weight: bold; font-family: inherit; text-align: center; cursor: pointer; outline: none;">
         </div>
 
         <a href="https://docs.google.com/spreadsheets/d/1AN2YYoW63gLwkXVi_jpmuMjkrboNkOv5PPoKM0UVfjI/edit?gid=894136498#gid=894136498" target="_blank" class="sheet-btn">구글 시트 바로가기</a>
         
+        <button id="summary-toggle-btn" onclick="toggleSummarySection()" class="sheet-btn" style="width: 100%; border: none; cursor: pointer; font-family: inherit;">💰 0월 수입/정산 요약 보기 ▾</button>
+        <div id="summary-section-wrapper" style="display: none; margin-bottom: 10px; background: rgba(255,255,255,0.05); padding: 15px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.1);">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                <span style="color: #cbd5e1; font-size: 14px;">총 수입</span>
+                <span id="summary-income" style="color: #4ade80; font-weight: bold; font-size: 15px;">0원</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                <span style="color: #cbd5e1; font-size: 14px;">총 지출</span>
+                <span id="summary-expense" style="color: #f87171; font-weight: bold; font-size: 15px;">0원</span>
+            </div>
+            <div style="border-top: 1px dashed rgba(255,255,255,0.2); margin: 10px 0;"></div>
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <span style="color: #ffffff; font-size: 14px; font-weight: bold;">이번 달 정산 잔액</span>
+                <span id="summary-balance" style="font-weight: bold; font-size: 18px;">0원</span>
+            </div>
+        </div>
+
         <button id="card-toggle-btn" onclick="toggleCardSection()" class="sheet-btn" style="width: 100%; border: none; cursor: pointer; font-family: inherit;">💳 0월 카드별 지출 보기 ▾</button>
         <div id="card-section-wrapper" style="display: none; margin-bottom: 10px; background: rgba(255,255,255,0.05); padding: 10px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.1);">
             <div style="text-align: right; margin-bottom: 8px;">
@@ -124,7 +142,7 @@
                 <div id="onnuri-balance" style="font-size: 16px; font-weight: bold; color: #4ade80;">0원</div>
             </div>
             <div class="balance-box" style="margin: 0; text-align: right;">
-                <div class="label" id="balance-label">이번 달 정산 잔액</div>
+                <div class="label" id="balance-label">결제 예정 금액</div>
                 <div class="amount" id="db-balance" style="color: #f87171;">0 원</div>
             </div>
         </div>
@@ -161,7 +179,7 @@
         
         <div class="input-row">
             <select id="category" style="flex: 1; min-width: 0;"></select>
-            <button type="button" onclick="openCategoryModal()" style="height: 48px; padding: 0 14px; border: 1px solid #e2e8f0; border-radius: 8px; font-size: 13px; background-color: #f8fafc; color: #64748b; font-weight: bold; cursor: pointer; white-space: nowrap; flex-shrink: 0; box-sizing: border-box;">카테고리 추가/삭제</button>
+            <button type="button" onclick="openCategoryModal()" style="padding: 12px 10px; border: 1px solid #e2e8f0; border-radius: 8px; font-size: 13px; background-color: #f8fafc; color: #64748b; font-weight: bold; cursor: pointer; white-space: nowrap; flex-shrink: 0;">카테고리 추가/삭제</button>
         </div>
         
         <div class="input-row">
@@ -173,8 +191,12 @@
     <div class="list-section">
         <div class="list-title" style="display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap;">
             <span id="dynamic-list-title">선택 월 입출금 내역</span>
-            <select id="list-category-filter" onchange="openCategoryDetailModal(this.value)" style="padding: 6px 10px; font-size: 13px; border-radius: 6px; border: 1px solid #cbd5e1; background: white; font-weight: normal; font-family: inherit; width: auto; margin: 0; height: auto;">
-                <option value="">카테고리별 합산 보기</option>
+            <select id="main-list-sort-select" onchange="setMainListSort(this.value)" style="padding: 6px 10px; font-size: 13px; border-radius: 6px; border: 1px solid #cbd5e1; background: white; font-weight: normal; font-family: inherit; width: auto; margin: 0;">
+                <option value="date_desc">최신순</option>
+                <option value="date_asc">과거순</option>
+                <option value="amt_desc">높은금액</option>
+                <option value="amt_asc">낮은금액</option>
+                <option value="name">가나다순</option>
             </select>
         </div>
         <ul class="ledger-list" id="ledger-list"></ul>
@@ -182,9 +204,18 @@
 
     <div class="card-modal-overlay" id="category-detail-modal" onclick="closeCategoryDetailModal()">
         <div class="modal-content" onclick="event.stopPropagation()">
-            <div class="modal-title" id="category-detail-title" style="font-size: 16px; font-weight: bold; color: #1e293b; margin-bottom: 12px;">카테고리 상세</div>
+            <div class="modal-header-row" style="margin-bottom: 12px;">
+                <div class="modal-title" id="category-detail-title" style="font-size: 16px; font-weight: bold; color: #1e293b;">카테고리 상세</div>
+                <select id="category-sort-select" onchange="setCategorySort(this.value)">
+                    <option value="date_desc">최신순</option>
+                    <option value="date_asc">과거순</option>
+                    <option value="amt_desc">높은금액</option>
+                    <option value="amt_asc">낮은금액</option>
+                    <option value="name">가나다순</option>
+                </select>
+            </div>
             <div id="category-detail-summary" style="margin: 10px 0 15px 0; padding: 14px; background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; font-size: 14px;"></div>
-            <div id="category-detail-list" style="max-height: 250px; overflow-y: auto; border-top: 1px dashed #cbd5e1; padding-top: 5px;"></div>
+            <div id="category-detail-list" style="max-height: 450px; overflow-y: auto; border-top: 1px dashed #cbd5e1; padding-top: 5px;"></div>
             <button class="modal-btn cancel" style="margin-top:15px; width:100%;" onclick="closeCategoryDetailModal()">닫기</button>
         </div>
     </div>
@@ -193,7 +224,7 @@
         <div class="modal-content" onclick="event.stopPropagation()">
             <div class="modal-header-row">
                 <div class="modal-title" id="card-modal-title">카드 상세</div>
-                <select id="card-sort-select" onchange="setCardSort(this.value)" style="height: auto; padding: 6px;">
+                <select id="card-sort-select" onchange="setCardSort(this.value)">
                     <option value="date_desc">최신순</option>
                     <option value="date_asc">과거순</option>
                     <option value="amt_desc">높은금액</option>
@@ -201,7 +232,7 @@
                     <option value="name">가나다순</option>
                 </select>
             </div>
-            <div id="card-modal-list" style="max-height: 300px; overflow-y: auto;"></div>
+            <div id="card-modal-list" style="max-height: 450px; overflow-y: auto;"></div>
             <button class="modal-btn cancel" style="margin-top:15px; width:100%;" onclick="closeCardModal()">닫기</button>
         </div>
     </div>
@@ -253,7 +284,7 @@
             <div class="modal-title">카테고리 편집</div>
             <div class="input-row" style="margin-top:15px; display: flex; gap: 8px;">
                 <input type="text" id="new-category-name" placeholder="새 카테고리 입력" style="flex: 1; min-width: 0;">
-                <button class="modal-btn save" id="category-add-btn" onclick="addCategory()" style="flex: none; width: 70px; margin-top: 0; height: 48px; padding: 0;">추가</button>
+                <button class="modal-btn save" id="category-add-btn" onclick="addCategory()" style="flex: none; width: 70px; margin-top: 0; padding: 12px 0;">추가</button>
             </div>
             <div id="category-manage-list" style="max-height: 200px; overflow-y: auto; margin-top: 12px; border: 1px solid #e2e8f0; border-radius: 8px; padding: 5px; background: #f8fafc;"></div>
             <div class="modal-buttons" style="margin-top: 15px;">
@@ -288,6 +319,12 @@
     
     let currentCardModalName = '';
     let currentCardSort = 'date_desc'; 
+    
+    // 💡 추가: 카테고리 상세 모달과 메인 리스트 정렬 상태 변수
+    let currentCategoryModalName = '';
+    let currentCategorySort = 'date_desc'; 
+    let currentMainListSort = 'date_desc';
+
     let selectedMonth = ''; 
 
     const defaultCategories = ['식비', '교통비', '쇼핑/패션', '마트/생필품', '문화/여가', '의료/건강', '주거/통신', '카페/간식', '온누리', '기타'];
@@ -296,16 +333,15 @@
     function showLoading(msg) { document.getElementById('loading-text').innerText = msg || "데이터를 처리하고 있습니다..."; document.getElementById('loading-overlay').style.display = 'flex'; }
     function hideLoading() { document.getElementById('loading-overlay').style.display = 'none'; }
     function initCategories() { renderCategoryDropdowns(); }
+    
     function renderCategoryDropdowns() {
         const catSelect = document.getElementById('category');
         const modalCatSelect = document.getElementById('modal-category');
-        const filterSelect = document.getElementById('list-category-filter');
         const currentVal = catSelect.value;
         const currentModalVal = modalCatSelect.value;
         const optionsHtml = categories.map(cat => `<option value="${cat}">${cat}</option>`).join('');
         catSelect.innerHTML = '<option value="" disabled selected hidden>카테고리 선택</option>' + optionsHtml;
         modalCatSelect.innerHTML = '<option value="" disabled selected hidden>카테고리 선택</option>' + optionsHtml;
-        filterSelect.innerHTML = '<option value="">카테고리별 합산 보기</option>' + optionsHtml;
         if(currentVal && categories.includes(currentVal)) catSelect.value = currentVal;
         if(currentModalVal && categories.includes(currentModalVal)) modalCatSelect.value = currentModalVal;
     }
@@ -343,20 +379,28 @@
     }
 
     function initHeader() { const tzOffset = new Date().getTimezoneOffset() * 60000; selectedMonth = (new Date(Date.now() - tzOffset)).toISOString().substring(0, 7); document.getElementById('month-picker').value = selectedMonth; updateToggleBtnTexts(); }
+    
     function updateToggleBtnTexts() {
         const monthNum = parseInt(selectedMonth.substring(5, 7));
         const cardBtn = document.getElementById('card-toggle-btn');
         const cardWrapper = document.getElementById('card-section-wrapper');
         cardBtn.innerText = (cardWrapper.style.display === 'block') ? `💳 ${monthNum}월 카드별 지출 접기 ▴` : `💳 ${monthNum}월 카드별 지출 보기 ▾`;
+        
         const catBtn = document.getElementById('category-toggle-btn');
         const catWrapper = document.getElementById('category-section-wrapper');
         catBtn.innerText = (catWrapper.style.display === 'block') ? `📊 ${monthNum}월 카테고리별 지출 접기 ▴` : `📊 ${monthNum}월 카테고리별 지출 보기 ▾`;
+
+        const sumBtn = document.getElementById('summary-toggle-btn');
+        const sumWrapper = document.getElementById('summary-section-wrapper');
+        sumBtn.innerText = (sumWrapper.style.display === 'block') ? `💰 ${monthNum}월 수입/정산 요약 접기 ▴` : `💰 ${monthNum}월 수입/정산 요약 보기 ▾`;
     }
 
     function setTodayDate() { const tzOffset = new Date().getTimezoneOffset() * 60000; const localISOTime = (new Date(Date.now() - tzOffset)).toISOString().slice(0, 10); document.getElementById('date').value = localISOTime; }
     function changeMonth(val) { if (!val) return; selectedMonth = val; updateToggleBtnTexts(); renderApp(); }
+    
     function toggleCardSection() { const wrapper = document.getElementById('card-section-wrapper'); wrapper.style.display = (wrapper.style.display === 'none' || wrapper.style.display === '') ? 'block' : 'none'; updateToggleBtnTexts(); }
     function toggleCategorySection() { const wrapper = document.getElementById('category-section-wrapper'); wrapper.style.display = (wrapper.style.display === 'none' || wrapper.style.display === '') ? 'block' : 'none'; updateToggleBtnTexts(); }
+    function toggleSummarySection() { const wrapper = document.getElementById('summary-section-wrapper'); wrapper.style.display = (wrapper.style.display === 'none' || wrapper.style.display === '') ? 'block' : 'none'; updateToggleBtnTexts(); }
 
     function openCardLimitModal() {
         document.getElementById('card-limit-modal').style.display = 'flex';
@@ -365,7 +409,7 @@
         listDiv.innerHTML = targetCards.map(card => `
             <div style="display: flex; align-items: center; justify-content: space-between; gap: 10px;">
                 <span style="font-size: 14px; font-weight: bold; color: #334155; width: 75px;">${card}</span>
-                <input type="number" id="limit-${card}" value="${cardLimits[card] || ''}" placeholder="기준액" style="flex: 1; padding: 10px; font-size: 14px; margin: 0; height: auto;">
+                <input type="number" id="limit-${card}" value="${cardLimits[card] || ''}" placeholder="기준액" style="flex: 1; padding: 10px; font-size: 14px; margin: 0;">
                 <span style="font-size: 13px; color: #64748b;">원</span>
             </div>
         `).join('');
@@ -380,21 +424,18 @@
         showLoading("서버에 목표 실적을 동기화 중입니다...");
         fetch(googleWebAppsUrl, { method: 'POST', body: JSON.stringify({ action: 'saveCardLimits', limits: newLimits }) })
         .then(r => r.json()).then(result => { 
-            if (result.result === "success") {
-                cardLimits = newLimits; 
-                closeCardLimitModal(); 
-                renderApp(); 
-            } else {
-                alert('실적 설정 저장 실패: ' + result.error);
-            }
-        }).catch(err => {
-            alert('서버 연결 오류 발생');
-        }).finally(() => hideLoading());
+            if (result.result === "success") { cardLimits = newLimits; closeCardLimitModal(); renderApp(); } 
+            else { alert('실적 설정 저장 실패: ' + result.error); }
+        }).catch(err => { alert('서버 연결 오류 발생'); }).finally(() => hideLoading());
     }
+
+    // 💡 정렬 함수들
+    function setCardSort(val) { currentCardSort = val; renderCardModal(); }
+    function setCategorySort(val) { currentCategorySort = val; renderCategoryDetailModal(); }
+    function setMainListSort(val) { currentMainListSort = val; renderApp(); }
 
     function openCardModal(cardName) { currentCardModalName = cardName; document.getElementById('card-modal').style.display = 'flex'; document.getElementById('card-sort-select').value = currentCardSort; renderCardModal(); }
     function closeCardModal() { document.getElementById('card-modal').style.display = 'none'; }
-    function setCardSort(val) { currentCardSort = val; renderCardModal(); }
     function renderCardModal() {
         const modalList = document.getElementById('card-modal-list');
         document.getElementById('card-modal-title').innerText = currentCardModalName;
@@ -404,6 +445,7 @@
         else if(currentCardSort === 'name') filtered.sort((a,b) => a.title.localeCompare(b.title));
         else if(currentCardSort === 'date_asc') filtered.sort((a,b) => new Date(a.date) - new Date(b.date));
         else filtered.sort((a,b) => new Date(b.date) - new Date(a.date));
+        
         modalList.innerHTML = filtered.map(item => `
             <li class="ledger-item ${item.user}" onclick="openModal(${item.id}); closeCardModal();">
                 <div style="display: flex; flex-direction: column; gap: 5px; flex: 1;">
@@ -420,25 +462,51 @@
         `).join('') || '<div style="text-align:center; padding:20px; color:#94a3b8;">내역이 없습니다.</div>';
     }
 
+    // 💡 수정: 카테고리 상세 모달 정렬 필터 연동
     function openCategoryDetailModal(catName) {
         if (!catName) return;
+        currentCategoryModalName = catName;
         document.getElementById('category-detail-modal').style.display = 'flex';
+        document.getElementById('category-sort-select').value = currentCategorySort;
+        renderCategoryDetailModal();
+    }
+    
+    function renderCategoryDetailModal() {
+        const catName = currentCategoryModalName;
         document.getElementById('category-detail-title').innerText = `${parseInt(selectedMonth.substring(5, 7))}월 내역 정보`;
+        
         let filtered = ledgerItems.filter(i => i.category === catName && i.date && i.date.startsWith(selectedMonth));
         let totalExp = 0; let cardTotalsMap = {}; 
-        filtered.forEach(i => { if (i.type === 'expense' || i.type === '지출') { totalExp += i.amount; let cardKey = i.card || '현금/계좌'; cardTotalsMap[cardKey] = (cardTotalsMap[cardKey] || 0) + i.amount; } });
+        
+        filtered.forEach(i => { 
+            if (i.type === 'expense' || i.type === '지출') { 
+                totalExp += i.amount; 
+                let cardKey = i.card || '현금/계좌'; 
+                cardTotalsMap[cardKey] = (cardTotalsMap[cardKey] || 0) + i.amount; 
+            } 
+        });
+        
         let cardSummaryHtml = Object.keys(cardTotalsMap).map(card => `<div style="display: flex; justify-content: space-between; font-size: 13px; color: #475569; margin-top: 5px; padding-left: 8px;"><span>• ${card}</span><span>${cardTotalsMap[card].toLocaleString()}원</span></div>`).join('');
         document.getElementById('category-detail-summary').innerHTML = `
             <div style="border-bottom: 1px solid #e2e8f0; padding-bottom: 8px; margin-bottom: 8px;"><div style="display: flex; justify-content: space-between; align-items: center; font-weight: bold; color: #1e293b;"><span>[${catName}] 총 지출</span><span style="color: #c62828; font-size: 16px;">${totalExp.toLocaleString()}원</span></div></div>
             <div><div style="font-size: 12px; font-weight: bold; color: #64748b;">💳 카드별 합산 내역</div>${cardSummaryHtml || '<div style="font-size:12px; color:#94a3b8; padding-top:4px; padding-left:8px;">지출 카드 정보가 없습니다.</div>'}</div>`;
+            
+        // 카테고리 모달 리스트 정렬
+        if(currentCategorySort === 'amt_desc') filtered.sort((a,b) => b.amount - a.amount);
+        else if(currentCategorySort === 'amt_asc') filtered.sort((a,b) => a.amount - b.amount);
+        else if(currentCategorySort === 'name') filtered.sort((a,b) => a.title.localeCompare(b.title));
+        else if(currentCategorySort === 'date_asc') filtered.sort((a,b) => new Date(a.date) - new Date(b.date));
+        else filtered.sort((a,b) => new Date(b.date) - new Date(a.date));
+
         document.getElementById('category-detail-list').innerHTML = filtered.map(item => `
             <div class="ledger-item ${item.user}" style="border-radius:6px; margin-bottom:5px;" onclick="openModal(${item.id}); closeCategoryDetailModal();">
                 <div style="display: flex; flex-direction: column; gap: 5px; flex: 1;"><div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap;"><span class="user-badge ${item.user}">${item.user}</span><span class="date-text">${item.date.substring(5)}</span><span class="card-badge">${item.card || '현금/계좌'}</span><span class="card-badge" style="background-color: #e2e8f0;">${item.category || '기타'}</span></div><div class="item-title" style="padding-left: 2px;">${item.title}</div></div>
                 <div class="item-amount ${(item.type === 'income' || item.type === '수입') ? 'income' : 'expense'}" style="margin-left:10px; flex-shrink:0;">${(item.type === 'income' || item.type === '수입') ? '+' : '-'}${item.amount.toLocaleString()}원</div>
             </div>`).join('') || '<div style="text-align:center; padding:20px; color:#94a3b8; font-size:13px;">내역이 존재하지 않습니다.</div>';
-        document.getElementById('list-category-filter').value = "";
     }
+    
     function closeCategoryDetailModal() { document.getElementById('category-detail-modal').style.display = 'none'; }
+    
     function changeUser(user) { selectedUser = user; document.getElementById('btn-user-husband').classList.toggle('active', user === '남편'); document.getElementById('btn-user-wife').classList.toggle('active', user === '아내'); }
     function selectType(type) { selectedType = type; document.getElementById('btn-inc').classList.toggle('active', type === 'income'); document.getElementById('btn-exp').classList.toggle('active', type === 'expense'); const cardSelect = document.getElementById('card'); cardSelect.disabled = (type === 'income'); if(type === 'income') cardSelect.value = '선택안함'; }
     function changeModalUser(user) { modalSelectedUser = user; document.getElementById('modal-user-husband').classList.toggle('active', user === '남편'); document.getElementById('modal-user-wife').classList.toggle('active', user === '아내'); }
@@ -449,9 +517,7 @@
         fetch(googleWebAppsUrl).then(res => res.json()).then(data => { 
             ledgerItems = data.items || []; 
             if (data.categories && data.categories.length > 0) categories = data.categories; 
-            
             cardLimits = (data.cardLimits && Object.keys(data.cardLimits).length > 0) ? data.cardLimits : {};
-            
             renderCategoryDropdowns(); 
             renderApp(); 
         }).catch(err => console.error(err)).finally(() => hideLoading());
@@ -484,6 +550,8 @@
         const listElement = document.getElementById('ledger-list'); listElement.innerHTML = '';
         let totalIncome = 0; let totalExpense = 0; let cardTotals = {}; let categoryTotals = {}; 
         let onnuriBalance = 0;
+        
+        // 전체 내역 기준으로 온누리 잔액 계산
         ledgerItems.forEach(item => {
             if ((item.type === 'expense' || item.type === '지출')) {
                 if ((item.card === '현금/계좌' || item.card === '선택안함') && item.category === '온누리') onnuriBalance += item.amount;
@@ -491,24 +559,38 @@
             }
         });
         document.getElementById('onnuri-balance').innerText = `${onnuriBalance.toLocaleString()}원`;
+        
         const monthNum = parseInt(selectedMonth.substring(5, 7));
         document.getElementById('dynamic-list-title').innerText = `${monthNum}월 수입 지출 내역`;
         updateToggleBtnTexts();
         
-        ledgerItems.sort((a, b) => (new Date(b.date) - new Date(a.date)) || (b.id - a.id)).forEach(item => {
-            if (item.date && item.date.startsWith(selectedMonth)) {
-                if (item.type === 'income' || item.type === '수입') totalIncome += item.amount;
-                else {
-                    let cardKey = item.card || '현금/계좌'; cardTotals[cardKey] = (cardTotals[cardKey] || 0) + item.amount;
-                    let catKey = item.category || '기타'; categoryTotals[catKey] = (categoryTotals[catKey] || 0) + item.amount;
-                    if (item.card !== '온누리') totalExpense += item.amount;
-                }
-                const li = document.createElement('li'); li.className = `ledger-item ${item.user}`; li.onclick = () => openModal(item.id);
-                li.innerHTML = `<div style="display: flex; flex-direction: column; gap: 5px; flex: 1;"><div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap;"><span class="user-badge ${item.user}">${item.user}</span><span class="date-text">${item.date.substring(5)}</span><span class="card-badge">${item.card || '현금/계좌'}</span><span class="card-badge" style="background-color: #e2e8f0;">${item.category || '기타'}</span></div><div class="item-title" style="padding-left: 2px;">${item.title}</div></div><div class="item-amount ${(item.type === 'income' || item.type === '수입') ? 'income' : 'expense'}" style="margin-left: 10px; flex-shrink: 0;">${(item.type === 'income' || item.type === '수입') ? '+' : '-'}${item.amount.toLocaleString()}원</div>`;
-                listElement.appendChild(li);
+        // 💡 선택 월 데이터 추출 및 계산
+        let monthItems = ledgerItems.filter(item => item.date && item.date.startsWith(selectedMonth));
+        
+        monthItems.forEach(item => {
+            if (item.type === 'income' || item.type === '수입') totalIncome += item.amount;
+            else {
+                let cardKey = item.card || '현금/계좌'; cardTotals[cardKey] = (cardTotals[cardKey] || 0) + item.amount;
+                let catKey = item.category || '기타'; categoryTotals[catKey] = (categoryTotals[catKey] || 0) + item.amount;
+                if (item.card !== '온누리') totalExpense += item.amount;
             }
         });
+
+        // 💡 메인 리스트 정렬 적용
+        if(currentMainListSort === 'amt_desc') monthItems.sort((a,b) => b.amount - a.amount);
+        else if(currentMainListSort === 'amt_asc') monthItems.sort((a,b) => a.amount - b.amount);
+        else if(currentMainListSort === 'name') monthItems.sort((a,b) => a.title.localeCompare(b.title));
+        else if(currentMainListSort === 'date_asc') monthItems.sort((a,b) => new Date(a.date) - new Date(b.date));
+        else monthItems.sort((a,b) => (new Date(b.date) - new Date(a.date)) || (b.id - a.id));
+        
+        monthItems.forEach(item => {
+            const li = document.createElement('li'); li.className = `ledger-item ${item.user}`; li.onclick = () => openModal(item.id);
+            li.innerHTML = `<div style="display: flex; flex-direction: column; gap: 5px; flex: 1;"><div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap;"><span class="user-badge ${item.user}">${item.user}</span><span class="date-text">${item.date.substring(5)}</span><span class="card-badge">${item.card || '현금/계좌'}</span><span class="card-badge" style="background-color: #e2e8f0;">${item.category || '기타'}</span></div><div class="item-title" style="padding-left: 2px;">${item.title}</div></div><div class="item-amount ${(item.type === 'income' || item.type === '수입') ? 'income' : 'expense'}" style="margin-left: 10px; flex-shrink: 0;">${(item.type === 'income' || item.type === '수입') ? '+' : '-'}${item.amount.toLocaleString()}원</div>`;
+            listElement.appendChild(li);
+        });
+
         if(listElement.children.length === 0) listElement.innerHTML = `<div style="text-align:center; padding:30px; color:#94a3b8; font-size:14px;">데이터가 없습니다.</div>`;
+        
         const cardGrid = document.getElementById('card-summary-grid'); cardGrid.innerHTML = '';
         Object.keys(cardTotals).sort((a, b) => cardTotals[b] - cardTotals[a]).forEach(card => {
             const container = document.createElement('div'); container.className = 'card-row-container'; container.style.marginBottom = '6px';
@@ -521,12 +603,29 @@
             } else { btn.innerHTML = `<span class="card-name">${card}</span><span class="card-val">${cardTotals[card].toLocaleString()}원</span>`; container.appendChild(btn); }
             cardGrid.appendChild(container);
         });
+        
         const categoryGrid = document.getElementById('category-summary-grid'); categoryGrid.innerHTML = '';
         Object.keys(categoryTotals).sort((a,b) => categoryTotals[b] - categoryTotals[a]).forEach(cat => {
             const btn = document.createElement('button'); const container = document.createElement('div'); btn.className = 'card-box'; btn.onclick = () => openCategoryDetailModal(cat); btn.innerHTML = `<span class="card-name">${cat}</span><span class="card-val">${categoryTotals[cat].toLocaleString()}원</span>`; container.className = 'card-row-container'; container.appendChild(btn); categoryGrid.appendChild(container);
         });
-        document.getElementById('db-balance').innerText = `${(totalIncome - totalExpense).toLocaleString()} 원`;
+        
+        // 💡 수정: 결제 예정 금액 (총 지출 금액만 출력)
+        document.getElementById('db-balance').innerText = `${totalExpense.toLocaleString()} 원`;
+        
+        // 💡 수정: 새로운 수입/정산 요약 섹션 값 업데이트
+        document.getElementById('summary-income').innerText = `${totalIncome.toLocaleString()}원`;
+        document.getElementById('summary-expense').innerText = `${totalExpense.toLocaleString()}원`;
+        
+        let netBalance = totalIncome - totalExpense;
+        let summaryBalanceEl = document.getElementById('summary-balance');
+        summaryBalanceEl.innerText = `${netBalance.toLocaleString()}원`;
+        if (netBalance >= 0) {
+            summaryBalanceEl.style.color = '#4ade80'; // 흑자: 초록
+        } else {
+            summaryBalanceEl.style.color = '#f87171'; // 적자: 빨강
+        }
     }
+    
     initHeader(); setTodayDate(); initCategories(); loadCloudData();
 </script>
 
