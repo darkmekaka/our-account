@@ -19,11 +19,6 @@
         .balance-box { margin-top: 10px; text-align: right; }
         .balance-box .label { font-size: 13px; opacity: 0.7; }
         .balance-box .amount { font-size: 24px; font-weight: bold; }
-        
-        /* 온누리 잔고 배너 스타일 */
-        .onnuri-banner { background: rgba(255, 255, 255, 0.08); border-radius: 12px; padding: 12px; display: flex; flex-direction: column; align-items: center; justify-content: center; border: 1px solid rgba(255,255,255,0.1); }
-        .onnuri-banner .title { font-size: 13px; color: #cbd5e1; margin-bottom: 4px; }
-        .onnuri-banner .balance { font-size: 18px; font-weight: bold; color: #4ade80; }
 
         .summary-row { display: flex; gap: 15px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 15px; margin-top: 15px; }
         .summary-item { flex: 1; }
@@ -128,12 +123,12 @@
             <div class="card-grid" id="category-summary-grid"></div>
         </div>
 
-        <div style="display: flex; gap: 10px; margin-top: 10px; margin-bottom: 5px;">
-            <div class="onnuri-banner" style="flex: 1;">
-                <div class="title">🪙 온누리 잔액</div>
-                <div class="balance" id="onnuri-balance">0원</div>
+        <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-top: 10px; margin-bottom: 5px; padding: 0 5px;">
+            <div style="text-align: left;">
+                <div style="font-size: 13px; opacity: 0.7; margin-bottom: 4px;">🪙 온누리 잔액</div>
+                <div id="onnuri-balance" style="font-size: 16px; font-weight: bold;">0원</div>
             </div>
-            <div class="balance-box" style="flex: 1; margin: 0; display: flex; flex-direction: column; align-items: flex-end; justify-content: center;">
+            <div class="balance-box" style="margin: 0; text-align: right;">
                 <div class="label" id="balance-label">이번 달 정산 잔액</div>
                 <div class="amount" id="db-balance">0 원</div>
             </div>
@@ -392,13 +387,24 @@
         `).join('');
     }
     function closeCardLimitModal() { document.getElementById('card-limit-modal').style.display = 'none'; }
+    
     function saveCardLimits() {
         const targetCards = ['현대카드', 'bc카드', '국민카드', '롯데카드', '신한카드', 'NH카드'];
         const newLimits = {};
         targetCards.forEach(card => { const val = document.getElementById(`limit-${card}`).value; newLimits[card] = val ? parseInt(val) : 0; });
         showLoading("실적 설정 구간을 서버에 동기화 중입니다...");
         fetch(googleWebAppsUrl, { method: 'POST', body: JSON.stringify({ action: 'saveCardLimits', limits: newLimits }) })
-        .then(r => r.json()).then(result => { if (result.result === "success") { cardLimits = newLimits; closeCardLimitModal(); renderApp(); } else { alert('실적 설정 저장 실패: ' + result.error); } }).catch(err => alert('네트워크 오류가 발생했습니다.')).finally(() => hideLoading());
+        .then(r => r.json()).then(result => { 
+            cardLimits = newLimits; 
+            try { localStorage.setItem('cardLimits', JSON.stringify(newLimits)); } catch(e) {}
+            closeCardLimitModal(); 
+            renderApp(); 
+        }).catch(err => {
+            cardLimits = newLimits;
+            try { localStorage.setItem('cardLimits', JSON.stringify(newLimits)); } catch(e) {}
+            closeCardLimitModal(); 
+            renderApp(); 
+        }).finally(() => hideLoading());
     }
 
     function openCardModal(cardName) { currentCardModalName = cardName; document.getElementById('card-modal').style.display = 'flex'; document.getElementById('card-sort-select').value = currentCardSort; renderCardModal(); }
@@ -452,10 +458,22 @@
     function selectType(type) { selectedType = type; document.getElementById('btn-inc').classList.toggle('active', type === 'income'); document.getElementById('btn-exp').classList.toggle('active', type === 'expense'); const cardSelect = document.getElementById('card'); cardSelect.disabled = (type === 'income'); if(type === 'income') cardSelect.value = '선택안함'; }
     function changeModalUser(user) { modalSelectedUser = user; document.getElementById('modal-user-husband').classList.toggle('active', user === '남편'); document.getElementById('modal-user-wife').classList.toggle('active', user === '아내'); }
     function selectModalType(type) { modalSelectedType = type; document.getElementById('modal-inc').classList.toggle('active', type === 'income'); document.getElementById('modal-exp').classList.toggle('active', type === 'expense'); const mCardSelect = document.getElementById('modal-card'); mCardSelect.disabled = (type === 'income'); if(type === 'income') mCardSelect.value = '선택안함'; }
+    
     function loadCloudData() {
         showLoading("서버 클라우드 데이터를 동기화하고 있습니다...");
-        fetch(googleWebAppsUrl).then(res => res.json()).then(data => { ledgerItems = data.items || []; if (data.categories && data.categories.length > 0) categories = data.categories; cardLimits = data.cardLimits || {}; renderCategoryDropdowns(); renderApp(); }).catch(err => console.error(err)).finally(() => hideLoading());
+        fetch(googleWebAppsUrl).then(res => res.json()).then(data => { 
+            ledgerItems = data.items || []; 
+            if (data.categories && data.categories.length > 0) categories = data.categories; 
+            
+            let localLimits = {};
+            try { localLimits = JSON.parse(localStorage.getItem('cardLimits')) || {}; } catch(e) {}
+            cardLimits = (data.cardLimits && Object.keys(data.cardLimits).length > 0) ? data.cardLimits : localLimits;
+            
+            renderCategoryDropdowns(); 
+            renderApp(); 
+        }).catch(err => console.error(err)).finally(() => hideLoading());
     }
+    
     function addItem() {
         const date = document.getElementById('date').value; const card = document.getElementById('card').value; const title = document.getElementById('title').value; const amount = document.getElementById('amount').value; const category = document.getElementById('category').value; 
         if (!date || !title || !amount || !category) { alert('날짜, 금액, 카테고리, 내역을 모두 선택 및 입력해주세요!'); return; }
