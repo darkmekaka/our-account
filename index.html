@@ -110,21 +110,33 @@
 
 <div class="app-container">
     <div class="header">
-        <h1>쑥잠이네 가계부</h1>
-        
-        <div style="text-align: center; margin-bottom: 15px;">
-            <input type="month" id="month-picker" onchange="changeMonth(this.value)" style="padding: 8px 14px; font-size: 15px; border-radius: 8px; border: none; background-color: #334155; color: #ffffff; font-weight: bold; font-family: inherit; text-align: center; cursor: pointer; outline: none;">
-        </div>
+    <h1>쑥잠이네 가계부</h1>
+    
+    <div style="text-align: center; margin-bottom: 15px;">
+        <input type="month" id="month-picker" onchange="changeMonth(this.value)" style="padding: 8px 14px; font-size: 15px; border-radius: 8px; border: none; background-color: #334155; color: #ffffff; font-weight: bold; font-family: inherit; text-align: center; cursor: pointer; outline: none;">
+    </div>
 
-        <a href="https://docs.google.com/spreadsheets/d/1AN2YYoW63gLwkXVi_jpmuMjkrboNkOv5PPoKM0UVfjI/edit?gid=894136498#gid=894136498" target="_blank" class="sheet-btn">구글 시트 바로가기</a>
-        
-        <button id="card-toggle-btn" onclick="toggleCardSection()" class="sheet-btn" style="width: 100%; border: none; cursor: pointer; font-family: inherit;">💳 0월 카드별 지출 보기 ▾</button>
-        <div id="card-section-wrapper" style="display: none; margin-bottom: 10px; background: rgba(255,255,255,0.05); padding: 10px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.1);">
-            <div style="text-align: right; margin-bottom: 8px;">
-                <button onclick="openCardLimitModal()" style="background: #334155; color: #cbd5e1; border: none; padding: 5px 10px; border-radius: 6px; font-size: 11px; cursor: pointer; font-family: inherit;">⚙️ 카드별 실적 목표 설정</button>
-            </div>
-            <div class="card-grid" id="card-summary-grid"></div>
+    <!-- 정산 잔액과 온누리 잔액을 가로로 배치 -->
+    <div style="display: flex; gap: 15px; margin-bottom: 20px;">
+        <!-- 이번 달 정산 잔액 -->
+        <div class="balance-box" style="flex: 1; margin: 0; text-align: left;">
+            <div class="label">이번 달 정산 잔액</div>
+            <div class="amount" id="db-balance" style="font-size: 24px;">0 원</div>
         </div>
+        <!-- 온누리 상품권 잔액 (왼쪽 배치 완료) -->
+        <div class="balance-box" style="flex: 1; margin: 0; text-align: right;">
+            <div class="label" style="display: flex; align-items: center; justify-content: flex-end; gap: 4px;">
+                🪙 온누리 잔액
+            </div>
+            <div class="amount" id="onnuri-balance" style="font-size: 24px; color: #4ade80;">0원</div>
+        </div>
+    </div>
+
+    <a href="https://docs.google.com/spreadsheets/d/1AN2YYoW63gLwkXVi_jpmuMjkrboNkOv5PPoKM0UVfjI/edit?gid=894136498#gid=894136498" target="_blank" class="sheet-btn">구글 시트 바로가기</a>
+    
+    <button id="card-toggle-btn" onclick="toggleCardSection()" class="sheet-btn" style="width: 100%; border: none; cursor: pointer; font-family: inherit;">💳 0월 카드별 지출 보기 ▾</button>
+    <!-- (이하 기존 토글 섹션들 동일) -->
+</div>
 
         <button id="category-toggle-btn" onclick="toggleCategorySection()" class="sheet-btn" style="width: 100%; border: none; cursor: pointer; font-family: inherit;">📊 0월 카테고리별 지출 보기 ▾</button>
         <div id="category-section-wrapper" style="display: none; margin-bottom: 15px; background: rgba(255,255,255,0.05); padding: 10px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.1);">
