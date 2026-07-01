@@ -19,13 +19,6 @@
         .balance-box { margin-top: 10px; text-align: right; }
         .balance-box .label { font-size: 13px; opacity: 0.7; }
         .balance-box .amount { font-size: 24px; font-weight: bold; }
-
-        .summary-row { display: flex; gap: 15px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 15px; margin-top: 15px; }
-        .summary-item { flex: 1; }
-        .summary-item .title { font-size: 12px; opacity: 0.7; margin-bottom: 4px; }
-        .summary-item .val { font-size: 16px; font-weight: bold; }
-        .summary-item.income .val { color: #4ade80; }
-        .summary-item.expense .val { color: #f87171; }
         
         /* 입력 섹션 */
         .input-section { padding: 20px; border-bottom: 8px solid #f5f7fa; }
@@ -123,25 +116,14 @@
             <div class="card-grid" id="category-summary-grid"></div>
         </div>
 
-        <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-top: 10px; margin-bottom: 5px; padding: 0 5px;">
+        <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-top: 10px; padding: 0 5px;">
             <div style="text-align: left;">
                 <div style="font-size: 13px; opacity: 0.7; margin-bottom: 4px;">🪙 온누리 잔액</div>
-                <div id="onnuri-balance" style="font-size: 16px; font-weight: bold;">0원</div>
+                <div id="onnuri-balance" style="font-size: 16px; font-weight: bold; color: #4ade80;">0원</div>
             </div>
             <div class="balance-box" style="margin: 0; text-align: right;">
                 <div class="label" id="balance-label">이번 달 정산 잔액</div>
-                <div class="amount" id="db-balance">0 원</div>
-            </div>
-        </div>
-
-        <div class="summary-row">
-            <div class="summary-item income">
-                <div class="title">이번 달 수입</div>
-                <div class="val" id="db-income">+ 0원</div>
-            </div>
-            <div class="summary-item expense">
-                <div class="title">이번 달 지출</div>
-                <div class="val" id="db-expense">- 0원</div>
+                <div class="amount" id="db-balance" style="color: #f87171;">0 원</div>
             </div>
         </div>
     </div>
@@ -391,20 +373,31 @@
     function saveCardLimits() {
         const targetCards = ['현대카드', 'bc카드', '국민카드', '롯데카드', '신한카드', 'NH카드'];
         const newLimits = {};
-        targetCards.forEach(card => { const val = document.getElementById(`limit-${card}`).value; newLimits[card] = val ? parseInt(val) : 0; });
-        showLoading("실적 설정 구간을 서버에 동기화 중입니다...");
-        fetch(googleWebAppsUrl, { method: 'POST', body: JSON.stringify({ action: 'saveCardLimits', limits: newLimits }) })
-        .then(r => r.json()).then(result => { 
-            cardLimits = newLimits; 
-            try { localStorage.setItem('cardLimits', JSON.stringify(newLimits)); } catch(e) {}
-            closeCardLimitModal(); 
-            renderApp(); 
-        }).catch(err => {
-            cardLimits = newLimits;
-            try { localStorage.setItem('cardLimits', JSON.stringify(newLimits)); } catch(e) {}
-            closeCardLimitModal(); 
-            renderApp(); 
-        }).finally(() => hideLoading());
+        targetCards.forEach(card => { 
+            const val = document.getElementById(`limit-${card}`).value; 
+            newLimits[card] = val ? parseInt(val) : 0; 
+        });
+
+        showLoading("서버에 목표 실적을 동기화 중입니다...");
+        
+        fetch(googleWebAppsUrl, { 
+            method: 'POST', 
+            body: JSON.stringify({ action: 'saveCardLimits', limits: newLimits }) 
+        })
+        .then(r => r.json())
+        .then(result => { 
+            if(result.result === "success") {
+                cardLimits = newLimits;
+                closeCardLimitModal(); 
+                renderApp(); 
+            } else {
+                alert('저장 실패: ' + result.error);
+            }
+        })
+        .catch(err => {
+            alert('서버 연결 오류 발생');
+        })
+        .finally(() => hideLoading());
     }
 
     function openCardModal(cardName) { currentCardModalName = cardName; document.getElementById('card-modal').style.display = 'flex'; document.getElementById('card-sort-select').value = currentCardSort; renderCardModal(); }
@@ -465,9 +458,8 @@
             ledgerItems = data.items || []; 
             if (data.categories && data.categories.length > 0) categories = data.categories; 
             
-            let localLimits = {};
-            try { localLimits = JSON.parse(localStorage.getItem('cardLimits')) || {}; } catch(e) {}
-            cardLimits = (data.cardLimits && Object.keys(data.cardLimits).length > 0) ? data.cardLimits : localLimits;
+            // 로컬 스토리지 데이터 무시하고 무조건 서버 데이터(Settings 탭)를 신뢰하도록 처리
+            cardLimits = (data.cardLimits && Object.keys(data.cardLimits).length > 0) ? data.cardLimits : {};
             
             renderCategoryDropdowns(); 
             renderApp(); 
@@ -542,8 +534,6 @@
             const btn = document.createElement('button'); const container = document.createElement('div'); btn.className = 'card-box'; btn.onclick = () => openCategoryDetailModal(cat); btn.innerHTML = `<span class="card-name">${cat}</span><span class="card-val">${categoryTotals[cat].toLocaleString()}원</span>`; container.className = 'card-row-container'; container.appendChild(btn); categoryGrid.appendChild(container);
         });
         document.getElementById('db-balance').innerText = `${(totalIncome - totalExpense).toLocaleString()} 원`;
-        document.getElementById('db-income').innerText = `+ ${totalIncome.toLocaleString()}원`;
-        document.getElementById('db-expense').innerText = `- ${totalExpense.toLocaleString()}원`;
     }
     initHeader(); setTodayDate(); initCategories(); loadCloudData();
 </script>
