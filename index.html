@@ -15,9 +15,15 @@
         .sheet-btn { display: block; text-align: center; background: rgba(255,255,255,0.1); color: #cbd5e1; padding: 6px; border-radius: 6px; text-decoration: none; font-size: 12px; margin-bottom: 10px; }
         .sheet-btn:hover { background: rgba(255,255,255,0.2); color: #ffffff; }
 
-        .balance-box { margin-top: 10px; margin-bottom: 20px; text-align: right; }
+        .balance-box { margin-top: 10px; margin-bottom: 15px; text-align: right; }
         .balance-box .label { font-size: 13px; opacity: 0.7; }
         .balance-box .amount { font-size: 30px; font-weight: bold; }
+        
+        /* 온누리 잔고 배너 스타일 */
+        .onnuri-banner { background: rgba(255, 255, 255, 0.08); border-radius: 12px; padding: 12px 15px; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; border: 1px solid rgba(255,255,255,0.1); }
+        .onnuri-banner .title { font-size: 13px; color: #cbd5e1; font-weight: 500; display: flex; align-items: center; gap: 5px; }
+        .onnuri-banner .balance { font-size: 16px; font-weight: bold; color: #4ade80; }
+
         .summary-row { display: flex; gap: 15px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 15px; }
         .summary-item { flex: 1; }
         .summary-item .title { font-size: 12px; opacity: 0.7; margin-bottom: 4px; }
@@ -42,6 +48,10 @@
         .card-box:hover { background-color: rgba(255, 255, 255, 0.05); }
         .card-name { color: #cbd5e1; font-weight: 500; }
         .card-val { font-weight: bold; color: #ffffff; }
+
+        /* 실적 프로그레스 바 스타일 */
+        .progress-wrapper { width: calc(100% - 24px); background: rgba(255,255,255,0.1); height: 5px; border-radius: 3px; margin: 0 auto 10px auto; overflow: hidden; }
+        .progress-bar { height: 100%; border-radius: 3px; transition: width 0.5s; }
 
         .input-row { display: flex; gap: 10px; margin-bottom: 12px; align-items: center; }
         input, select { padding: 12px; border: 1px solid #e2e8f0; border-radius: 8px; font-size: 15px; outline: none; background-color: #f8fafc; box-sizing: border-box; }
@@ -110,12 +120,20 @@
         
         <button id="card-toggle-btn" onclick="toggleCardSection()" class="sheet-btn" style="width: 100%; border: none; cursor: pointer; font-family: inherit;">💳 0월 카드별 지출 보기 ▾</button>
         <div id="card-section-wrapper" style="display: none; margin-bottom: 10px; background: rgba(255,255,255,0.05); padding: 10px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.1);">
+            <div style="text-align: right; margin-bottom: 8px;">
+                <button onclick="openCardLimitModal()" style="background: #334155; color: #cbd5e1; border: none; padding: 5px 10px; border-radius: 6px; font-size: 11px; cursor: pointer; font-family: inherit;">⚙️ 카드별 실적 목표 설정</button>
+            </div>
             <div class="card-grid" id="card-summary-grid"></div>
         </div>
 
         <button id="category-toggle-btn" onclick="toggleCategorySection()" class="sheet-btn" style="width: 100%; border: none; cursor: pointer; font-family: inherit;">📊 0월 카테고리별 지출 보기 ▾</button>
         <div id="category-section-wrapper" style="display: none; margin-bottom: 15px; background: rgba(255,255,255,0.05); padding: 10px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.1);">
             <div class="card-grid" id="category-summary-grid"></div>
+        </div>
+
+        <div class="onnuri-banner">
+            <div class="title">🪙 온누리상품권 보유 잔액</div>
+            <div class="balance" id="onnuri-balance">0원</div>
         </div>
 
         <div class="balance-box">
@@ -267,12 +285,25 @@
             </div>
         </div>
     </div>
+
+    <div class="modal-overlay" id="card-limit-modal">
+        <div class="modal-content" style="max-height: 80vh; overflow-y: auto;">
+            <div class="modal-title" style="margin-bottom: 5px;">카드별 실적 목표 설정</div>
+            <p style="font-size: 12px; color: #64748b; margin-bottom: 15px; margin-top: 0;">매달 채워야 하는 카드별 실적 기준을 입력해주세요.</p>
+            <div id="card-limit-inputs-list" style="display: flex; flex-direction: column; gap: 12px;"></div>
+            <div class="modal-buttons" style="margin-top: 20px;">
+                <button class="modal-btn cancel" onclick="closeCardLimitModal()">취소</button>
+                <button class="modal-btn save" onclick="saveCardLimits()">설정 저장</button>
+            </div>
+        </div>
+    </div>
 </div>
 
 <script>
-    const googleWebAppsUrl = "https://script.google.com/macros/s/AKfycbzQdP5paPPivkRuih1zXiT83GfrCGPWBNRT-FTWY2uyETRwpMfvRg_cyaBKECDf3nu6/exec"; 
+    const googleWebAppsUrl = "https://script.google.com/macros/s/AKfycbwAQUpi7Idekd0rOkjWi2b9oF4odKvCv1D87LNdRSCDPq-t0ZOFNlr5ewkb-mKrXHmy/exec"; 
 
     let ledgerItems = [];
+    let cardLimits = {}; // 카드 실적 목표 전역 변수
     let selectedUser = '남편';
     let selectedType = 'expense'; 
     let currentEditingId = null; 
@@ -283,7 +314,8 @@
     let currentCardSort = 'date_desc'; 
     let selectedMonth = ''; 
 
-    const defaultCategories = ['식비', '교통비', '쇼핑/패션', '마트/생필품', '문화/여가', '의료/건강', '주거/통신', '카페/간식', '기타'];
+    // 온누리가 카테고리에 항상 포함될 수 있도록 기본값 보강
+    const defaultCategories = ['식비', '교통비', '쇼핑/패션', '마트/생필품', '문화/여가', '의료/건강', '주거/통신', '카페/간식', '온누리', '기타'];
     let categories = [...defaultCategories];
 
     function showLoading(msg) {
@@ -330,7 +362,7 @@
         listDiv.innerHTML = categories.map(cat => `
             <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 8px; border-bottom: 1px solid #e2e8f0;">
                 <span style="font-size: 14px; color: #334155; font-weight: 500;">${cat}</span>
-                ${cat !== '기타' ? `<button onclick="deleteCategory('${cat}', this)" style="background: #fee2e2; color: #ef4444; border: none; padding: 4px 8px; border-radius: 4px; font-size: 12px; cursor: pointer; font-weight: bold;">삭제</button>` : ''}
+                ${(cat !== '기타' && cat !== '온누리') ? `<button onclick="deleteCategory('${cat}', this)" style="background: #fee2e2; color: #ef4444; border: none; padding: 4px 8px; border-radius: 4px; font-size: 12px; cursor: pointer; font-weight: bold;">삭제</button>` : ''}
             </div>
         `).join('') || '<div style="text-align:center; padding:10px; color:#94a3b8; font-size:13px;">카테고리가 없습니다.</div>';
     }
@@ -361,7 +393,7 @@
     }
 
     function deleteCategory(name, btnElement) {
-        if (name === '기타') return;
+        if (name === '기타' || name === '온누리') return;
         if (!confirm(`'${name}' 카테고리를 완전히 삭제하시겠습니까?`)) return;
         
         showLoading("카테고리를 클라우드에서 제거하고 있습니다...");
@@ -422,7 +454,6 @@
         renderApp();
     }
 
-    style="text-align: center;"
     function toggleCardSection() {
         const wrapper = document.getElementById('card-section-wrapper');
         wrapper.style.display = (wrapper.style.display === 'none' || wrapper.style.display === '') ? 'block' : 'none';
@@ -433,6 +464,52 @@
         const wrapper = document.getElementById('category-section-wrapper');
         wrapper.style.display = (wrapper.style.display === 'none' || wrapper.style.display === '') ? 'block' : 'none';
         updateToggleBtnTexts();
+    }
+
+    /* 카드별 실적 설정 모달 관리 함수들 */
+    function openCardLimitModal() {
+        document.getElementById('card-limit-modal').style.display = 'flex';
+        const listDiv = document.getElementById('card-limit-inputs-list');
+        const targetCards = ['현대카드', 'bc카드', '국민카드', '롯데카드', '신한카드', 'NH카드'];
+        
+        listDiv.innerHTML = targetCards.map(card => `
+            <div style="display: flex; align-items: center; justify-content: space-between; gap: 10px;">
+                <span style="font-size: 14px; font-weight: bold; color: #334155; width: 75px;">${card}</span>
+                <input type="number" id="limit-${card}" value="${cardLimits[card] || ''}" placeholder="실적 기준금액 입력" style="flex: 1; padding: 10px; font-size: 14px; margin: 0;">
+                <span style="font-size: 13px; color: #64748b;">원</span>
+            </div>
+        `).join('');
+    }
+    
+    function closeCardLimitModal() {
+        document.getElementById('card-limit-modal').style.display = 'none';
+    }
+    
+    function saveCardLimits() {
+        const targetCards = ['현대카드', 'bc카드', '국민카드', '롯데카드', '신한카드', 'NH카드'];
+        const newLimits = {};
+        targetCards.forEach(card => {
+            const val = document.getElementById(`limit-${card}`).value;
+            newLimits[card] = val ? parseInt(val) : 0;
+        });
+        
+        showLoading("실적 설정 구간을 서버에 동기화 중입니다...");
+        fetch(googleWebAppsUrl, {
+            method: 'POST',
+            body: JSON.stringify({ action: 'saveCardLimits', limits: newLimits })
+        })
+        .then(r => r.json())
+        .then(result => {
+            if (result.result === "success") {
+                cardLimits = newLimits;
+                closeCardLimitModal();
+                renderApp();
+            } else {
+                alert('실적 설정 저장 실패: ' + result.error);
+            }
+        })
+        .catch(err => alert('네트워크 오류가 발생했습니다.'))
+        .finally(() => hideLoading());
     }
 
     function openCardModal(cardName) {
@@ -490,7 +567,7 @@
         let cardTotalsMap = {}; 
 
         filtered.forEach(i => {
-            if (i.type === 'expense') {
+            if (i.type === 'expense' || i.type === '지출') {
                 totalExp += i.amount;
                 let cardKey = i.card || '현금/계좌';
                 cardTotalsMap[cardKey] = (cardTotalsMap[cardKey] || 0) + i.amount;
@@ -530,8 +607,8 @@
                     </div>
                     <div class="item-title" style="padding-left: 2px;">${item.title}</div>
                 </div>
-                <div class="item-amount ${item.type === 'income' ? 'income' : 'expense'}" style="margin-left:10px; flex-shrink:0;">
-                    ${item.type === 'income' ? '+' : '-'}${item.amount.toLocaleString()}원
+                <div class="item-amount ${(item.type === 'income' || item.type === '수입') ? 'income' : 'expense'}" style="margin-left:10px; flex-shrink:0;">
+                    ${(item.type === 'income' || item.type === '수입') ? '+' : '-'}${item.amount.toLocaleString()}원
                 </div>
             </div>
         `).join('') || '<div style="text-align:center; padding:20px; color:#94a3b8; font-size:13px;">해당 카테고리의 거래 내역이 존재하지 않습니다.</div>';
@@ -568,6 +645,7 @@
             if (data.categories && data.categories.length > 0) {
                 categories = data.categories;
             }
+            cardLimits = data.cardLimits || {}; // 클라우드 설정값 연동
             renderCategoryDropdowns();
             renderApp(); 
         })
@@ -657,23 +735,48 @@
         let cardTotals = {};
         let categoryTotals = {}; 
         
+        // --- [요구사항 2] 온누리상품권 롤링 잔액 실시간 전수 계산 로직 ---
+        let onnuriBalance = 0;
+        ledgerItems.forEach(item => {
+            const isExpense = (item.type === 'expense' || item.type === '지출');
+            if (isExpense) {
+                // 충전: 카드가 현금/계좌(혹은 미선택)이고 카테고리가 '온누리'인 경우 잔액 충전(+)
+                if ((item.card === '현금/계좌' || item.card === '선택안함') && item.category === '온누리') {
+                    onnuriBalance += item.amount;
+                }
+                // 지출: 사용한 카드가 '온누리'인 경우 잔액 차감(-)
+                if (item.card === '온누리') {
+                    onnuriBalance -= item.amount;
+                }
+            }
+        });
+        document.getElementById('onnuri-balance').innerText = `${onnuriBalance.toLocaleString()}원`;
+        // -------------------------------------------------------------
+
         const monthNum = parseInt(selectedMonth.substring(5, 7));
-        
         document.getElementById('dynamic-list-title').innerText = `${monthNum}월 수입 지출 내역`;
         updateToggleBtnTexts();
 
-        ledgerItems.sort((a,b) => new Date(b.date) - new Date(a.date)).forEach(item => {
+        ledgerItems.sort((a, b) => {
+            const dateDiff = new Date(b.date) - new Date(a.date);
+            if (dateDiff !== 0) return dateDiff;
+            return b.id - a.id;
+        }).forEach(item => {
             if (item.date && item.date.startsWith(selectedMonth)) {
-                if (item.type === 'income') {
+                const isIncome = (item.type === 'income' || item.type === '수입');
+                if (isIncome) {
                     totalIncome += item.amount;
                 } else {
-                    totalExpense += item.amount;
-                    
                     let cardKey = item.card || '현금/계좌';
                     cardTotals[cardKey] = (cardTotals[cardKey] || 0) + item.amount;
 
                     let catKey = item.category || '기타';
                     categoryTotals[catKey] = (categoryTotals[catKey] || 0) + item.amount;
+
+                    // 이중지출 방지: 온누리 카드로 결제한 내역은 이번 달 총 통장 지출합산에서 제외
+                    if (item.card !== '온누리') {
+                        totalExpense += item.amount;
+                    }
                 }
 
                 const li = document.createElement('li');
@@ -689,8 +792,8 @@
                         </div>
                         <div class="item-title" style="padding-left: 2px;">${item.title}</div>
                     </div>
-                    <div class="item-amount ${item.type === 'income' ? 'income' : 'expense'}" style="margin-left: 10px; flex-shrink: 0;">
-                        ${item.type === 'income' ? '+' : '-'}${item.amount.toLocaleString()}원
+                    <div class="item-amount ${(item.type === 'income' || item.type === '수입') ? 'income' : 'expense'}" style="margin-left: 10px; flex-shrink: 0;">
+                        ${(item.type === 'income' || item.type === '수입') ? '+' : '-'}${item.amount.toLocaleString()}원
                     </div>`;
                 listElement.appendChild(li);
             }
@@ -700,20 +803,45 @@
             listElement.innerHTML = `<div style="text-align:center; padding:30px; color:#94a3b8; font-size:14px;">${monthNum}월의 가계부 데이터가 없습니다.</div>`;
         }
 
+        // --- [요구사항 1] 카드별 실적구간 달성률 시각화 게이지 바 로직 반영 ---
         const cardGrid = document.getElementById('card-summary-grid');
         cardGrid.innerHTML = '';
         Object.keys(cardTotals).sort((a, b) => cardTotals[b] - cardTotals[a]).forEach(card => {
-            const btn = document.createElement('button');
             const container = document.createElement('div');
+            container.className = 'card-row-container';
+            container.style.marginBottom = '6px';
+            
+            const btn = document.createElement('button');
             btn.className = 'card-box';
             btn.onclick = () => openCardModal(card);
-            btn.innerHTML = `<span class="card-name">${card}</span><span class="card-val">${cardTotals[card].toLocaleString()}원</span>`;
-            container.className = 'card-row-container';
+            
+            const limit = cardLimits[card] || 0;
+            let progressBarHtml = '';
+            
+            if (limit > 0 && card !== '현금/계좌' && card !== '온누리') {
+                const percent = Math.min(Math.round((cardTotals[card] / limit) * 100), 100);
+                let barColor = '#38bdf8'; // 기본 에메랄드 블루
+                if (percent >= 100) barColor = '#4ade80'; // 100% 충족 시 초록색 변환
+                else if (percent >= 80) barColor = '#fbbf24'; // 80% 이상 노란색 알림
+                
+                btn.innerHTML = `
+                    <span class="card-name">${card} <span style="font-size:11px; opacity:0.6;">(목표: ${(limit/10000).toLocaleString()}만)</span></span>
+                    <span class="card-val">${cardTotals[card].toLocaleString()}원 (${percent}%)</span>
+                `;
+                progressBarHtml = `
+                    <div class="progress-wrapper">
+                        <div class="progress-bar" style="width: ${percent}%; background-color: ${barColor};"></div>
+                    </div>
+                `;
+            } else {
+                btn.innerHTML = `<span class="card-name">${card}</span><span class="card-val">${cardTotals[card].toLocaleString()}원</span>`;
+            }
+            
             container.appendChild(btn);
+            if (progressBarHtml) container.insertAdjacentHTML('beforeend', progressBarHtml);
             cardGrid.appendChild(container);
         });
 
-        /* ================= 요구사항 1번: 폴더 이모지(📁) 제거 완료 ================= */
         const categoryGrid = document.getElementById('category-summary-grid');
         categoryGrid.innerHTML = '';
         Object.keys(categoryTotals).sort((a,b) => categoryTotals[b] - categoryTotals[a]).forEach(cat => {
